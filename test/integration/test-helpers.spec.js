@@ -138,6 +138,7 @@ describe('PgTestHelpers integration', function () {
 
       // Should insert fixtures
       await testHelpers.insertFixtures();
+
       (await queryPromise('SELECT * FROM users'))
         .rows.should.deep.equal([
           {
@@ -156,6 +157,22 @@ describe('PgTestHelpers integration', function () {
             'name': 'Carl Foo',
             // eslint-disable-next-line unicorn/no-null
             'role': null,
+          },
+        ]);
+
+      (await queryPromise('SELECT * FROM foobar'))
+        .rows.should.deep.equal([
+          {
+            'bar_id': '026bf711-57fe-4b19-8082-45f8f839a654',
+            'created_at': new Date('2024-12-03T13:38:33.021Z'),
+            'foo_id': '727fe786-9bb4-45a5-aba0-de18ac77554a',
+            'value': 'Foobar value 1',
+          },
+          {
+            'bar_id': '633b6403-d66b-42c2-8a80-e89dd50301f9',
+            'created_at': new Date('2024-12-03T13:38:33.021Z'),
+            'foo_id': '727fe786-9bb4-45a5-aba0-de18ac77554a',
+            'value': 'Foobar value 2',
           },
         ]);
     });
