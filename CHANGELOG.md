@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/voxpelli/pg-utils/compare/v1.1.0...v1.1.1) (2024-12-03)
+
+
+### 🧹 Chores
+
+* fix and extend tests ([97f0298](https://github.com/voxpelli/pg-utils/commit/97f02980e5bc3e9b80c69cefb9e21d67df3b05ff))
+
 ## [1.1.0](https://github.com/voxpelli/pg-utils/compare/v1.0.0...v1.1.0) (2024-12-03)
 
 
