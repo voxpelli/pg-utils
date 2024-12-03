@@ -15,7 +15,8 @@ permissions:
 
 jobs:
   test:
-    uses: voxpelli/ghatemplates/.github/workflows/test.yml@main
+    uses: voxpelli/ghatemplates/.github/workflows/test-pg.yml@main
     with:
       node-versions: '20,22,23'
       os: 'ubuntu-latest'
+      pg-versions: '12,13,17'
