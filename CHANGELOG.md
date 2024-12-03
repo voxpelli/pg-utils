@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.2](https://github.com/voxpelli/pg-utils/compare/v1.1.1...v1.1.2) (2024-12-03)
+
+
+### 🩹 Fixes
+
+* the umzug schema types, make it more narrow ([87b80e6](https://github.com/voxpelli/pg-utils/commit/87b80e6ef4d94628a970f19a28da7457999c9aba))
+
+
+### 🧹 Chores
+
+* fix timezone troubles ([#5](https://github.com/voxpelli/pg-utils/issues/5)) ([cea20e0](https://github.com/voxpelli/pg-utils/commit/cea20e092728f852267e298bcec730057b44696e))
+
 ## [1.1.1](https://github.com/voxpelli/pg-utils/compare/v1.1.0...v1.1.1) (2024-12-03)
 
 
