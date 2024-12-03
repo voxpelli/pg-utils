@@ -62,13 +62,13 @@
     "mocha": "^10.8.2",
     "npm-run-all2": "^7.0.1",
     "type-coverage": "^2.29.7",
-    "typescript": "~5.7.2",
-    "umzug": "^3.8.2"
+    "typescript": "~5.7.2"
   },
   "dependencies": {
     "@types/pg": "^8.11.10",
     "pg": "^8.13.1",
     "pg-copy-streams": "^6.0.6",
-    "umzeption": "^0.4.1"
+    "umzeption": "^0.4.1",
+    "umzug": "^3.8.2"
   }
 }
