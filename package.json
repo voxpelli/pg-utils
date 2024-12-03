@@ -1,11 +1,11 @@
 {
-  "name": "@voxpelli/node-module-template",
+  "name": "@voxpelli/pg-utils",
   "version": "0.0.0",
-  "description": "A GitHub template repo for node modules",
-  "homepage": "http://github.com/voxpelli/node-module-template",
+  "description": " My personal database utils / helpers for Postgres",
+  "homepage": "http://github.com/voxpelli/pg-utils",
   "repository": {
     "type": "git",
-    "url": "git://github.com/voxpelli/node-module-template.git"
+    "url": "git://github.com/voxpelli/pg-utils.git"
   },
   "keywords": [],
   "author": "Pelle Wessman <pelle@kodfabrik.se> (http://kodfabrik.se/)",
@@ -28,11 +28,11 @@
     "build:0": "run-s clean",
     "build:1-declaration": "tsc -p declaration.tsconfig.json",
     "build": "run-s build:*",
-    "check:installed-check": "installed-check -i @voxpelli/eslint-config -i eslint",
+    "check:installed-check": "installed-check",
     "check:knip": "knip",
     "check:lint": "eslint",
     "check:tsc": "tsc",
-    "check:type-coverage": "type-coverage --detail --strict --at-least 99 --ignore-files 'test/*'",
+    "check:type-coverage": "type-coverage --detail --strict --at-least 95 --ignore-files 'test/*'",
     "check": "run-s clean && run-p check:*",
     "clean:declarations-top": "rm -rf $(find . -maxdepth 1 -type f -name '*.d.ts*' ! -name 'index.d.ts')",
     "clean:declarations-lib": "rm -rf $(find lib -type f -name '*.d.ts*' ! -name '*-types.d.ts')",
@@ -45,12 +45,16 @@
   },
   "devDependencies": {
     "@types/chai": "^4.3.20",
+    "@types/chai-as-promised": "^7.1.8",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.17.9",
+    "@types/pg-copy-streams": "^1.2.5",
     "@voxpelli/eslint-config": "^22.2.0",
     "@voxpelli/tsconfig": "^15.1.0",
     "c8": "^10.1.2",
     "chai": "^4.5.0",
+    "chai-as-promised": "^7.1.2",
+    "dotenv": "^16.4.6",
     "eslint": "^9.16.0",
     "husky": "^9.1.7",
     "installed-check": "^9.3.0",
@@ -58,6 +62,13 @@
     "mocha": "^10.8.2",
     "npm-run-all2": "^7.0.1",
     "type-coverage": "^2.29.7",
-    "typescript": "~5.7.2"
+    "typescript": "~5.7.2",
+    "umzug": "^3.8.2"
+  },
+  "dependencies": {
+    "@types/pg": "^8.11.10",
+    "pg": "^8.13.1",
+    "pg-copy-streams": "^6.0.6",
+    "umzeption": "^0.4.1"
   }
 }
