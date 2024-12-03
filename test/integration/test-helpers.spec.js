@@ -65,18 +65,18 @@ describe('PgTestHelpers integration', function () {
       (await queryPromise('SELECT * FROM users'))
         .rows.should.deep.equal([
           {
-            'created_at': new Date('2024-12-03T12:53:56.587Z'),
+            'created_at': new Date('2024-12-03T13:53:56.587Z'),
             'email': 'bob@example.com',
             'id': 'c7f1e901-28b0-41d7-9313-80fd10a07e74',
-            'last_edited_at': new Date('2024-12-03T12:53:56.587Z'),
+            'last_edited_at': new Date('2024-12-03T13:53:56.587Z'),
             'name': 'Bob Smith',
             'role': 'superuser',
           },
           {
-            'created_at': new Date('2024-12-03T12:53:56.587Z'),
+            'created_at': new Date('2024-12-03T13:53:56.587Z'),
             'email': 'carl@example.com',
             'id': '2d8d41ba-fcc4-4296-a212-61365e0efb75',
-            'last_edited_at': new Date('2024-12-03T12:53:56.587Z'),
+            'last_edited_at': new Date('2024-12-03T13:53:56.587Z'),
             'name': 'Carl Foo',
             // eslint-disable-next-line unicorn/no-null
             'role': null,
@@ -142,18 +142,18 @@ describe('PgTestHelpers integration', function () {
       (await queryPromise('SELECT * FROM users'))
         .rows.should.deep.equal([
           {
-            'created_at': new Date('2024-12-03T12:53:56.587Z'),
+            'created_at': new Date('2024-12-03T13:53:56.587Z'),
             'email': 'bob@example.com',
             'id': 'c7f1e901-28b0-41d7-9313-80fd10a07e74',
-            'last_edited_at': new Date('2024-12-03T12:53:56.587Z'),
+            'last_edited_at': new Date('2024-12-03T13:53:56.587Z'),
             'name': 'Bob Smith',
             'role': 'superuser',
           },
           {
-            'created_at': new Date('2024-12-03T12:53:56.587Z'),
+            'created_at': new Date('2024-12-03T13:53:56.587Z'),
             'email': 'carl@example.com',
             'id': '2d8d41ba-fcc4-4296-a212-61365e0efb75',
-            'last_edited_at': new Date('2024-12-03T12:53:56.587Z'),
+            'last_edited_at': new Date('2024-12-03T13:53:56.587Z'),
             'name': 'Carl Foo',
             // eslint-disable-next-line unicorn/no-null
             'role': null,
