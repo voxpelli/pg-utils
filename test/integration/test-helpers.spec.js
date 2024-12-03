@@ -4,14 +4,14 @@ import chai from 'chai';
 
 import { PgTestHelpers } from '../../index.js';
 
-import { connectionConfig } from '../db.js';
+import { connectionString } from '../db.js';
 
 chai.should();
 
 describe('PgTestHelpers integration', function () {
   beforeEach(async () => {
     await (new PgTestHelpers({
-      connectionConfig,
+      connectionString,
       schema: new URL('../create-complex-tables.pgsql', import.meta.url),
       tablesWithDependencies: [
         'foobar',
@@ -23,7 +23,7 @@ describe('PgTestHelpers integration', function () {
   describe('simple', () => {
     it('should be able to remove and init tables', async () => {
       const testHelpers = new PgTestHelpers({
-        connectionConfig,
+        connectionString,
         schema: new URL('../create-simple-tables.pgsql', import.meta.url),
       });
       const { queryPromise } = testHelpers;
@@ -48,7 +48,7 @@ describe('PgTestHelpers integration', function () {
 
     it('should be able to add fixtures', async () => {
       const testHelpers = new PgTestHelpers({
-        connectionConfig,
+        connectionString,
         fixtureFolder: new URL('../simple-fixtures', import.meta.url),
         schema: new URL('../create-simple-tables.pgsql', import.meta.url),
       });
@@ -88,7 +88,7 @@ describe('PgTestHelpers integration', function () {
   describe('complex', () => {
     it('should be able to remove and init tables', async () => {
       const testHelpers = new PgTestHelpers({
-        connectionConfig,
+        connectionString,
         schema: new URL('../create-complex-tables.pgsql', import.meta.url),
         tablesWithDependencies: [
           'foobar',
@@ -120,7 +120,7 @@ describe('PgTestHelpers integration', function () {
 
     it('should be able to add fixtures', async () => {
       const testHelpers = new PgTestHelpers({
-        connectionConfig,
+        connectionString,
         fixtureFolder: new URL('../complex-fixtures', import.meta.url),
         schema: new URL('../create-complex-tables.pgsql', import.meta.url),
         tablesWithDependencies: [

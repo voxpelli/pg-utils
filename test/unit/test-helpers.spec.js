@@ -8,7 +8,7 @@ chai.use(chaiAsPromised);
 const should = chai.should();
 
 const validConfig = Object.freeze({
-  connectionConfig: 'postgres://user:pass@localhost/pg_utils_test_db',
+  connectionString: 'postgres://user:pass@localhost/pg_utils_test_db',
   schema: 'something something create schema',
 });
 
@@ -27,18 +27,18 @@ describe('PgTestHelpers', function () {
 
   it('should fail when required options are missing', () => {
     // @ts-expect-error
-    should.throw(() => new PgTestHelpers({}), /^Invalid connectionConfig/);
+    should.throw(() => new PgTestHelpers({}), /^Invalid connectionString/);
   });
 
-  it('should fail when connectionConfig is missing', () => {
-    const { connectionConfig, ...config } = validConfig;
+  it('should fail when connectionString is missing', () => {
+    const { connectionString, ...config } = validConfig;
     // @ts-expect-error
-    should.throw(() => new PgTestHelpers(config), /^Invalid connectionConfig/);
+    should.throw(() => new PgTestHelpers(config), /^Invalid connectionString/);
   });
 
-  it('should fail when given invalid connectionConfig', () => {
+  it('should fail when given invalid connectionString', () => {
     // @ts-expect-error
-    should.throw(() => new PgTestHelpers({ connectionConfig: true }), /^Invalid connectionConfig/);
+    should.throw(() => new PgTestHelpers({ connectionString: true }), /^Invalid connectionString/);
   });
 
   it('should fail when given invalid fixtureFolder', () => {

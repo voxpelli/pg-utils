@@ -10,4 +10,4 @@ if (!process.env['DATABASE_URL']) {
 }
 
 // eslint-disable-next-line n/no-process-env
-export const connectionConfig = process.env['DATABASE_URL'];
+export const connectionString = process.env['DATABASE_URL'];
