@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/voxpelli/pg-utils/compare/v1.1.2...v1.2.0) (2024-12-04)
+
+
+### 🌟 Features
+
+* use `HEADER MATCH` (requires pg 15) ([887d957](https://github.com/voxpelli/pg-utils/commit/887d957e8613035e574654f59f50e33fc654cb1d))
+
 ## [1.1.2](https://github.com/voxpelli/pg-utils/compare/v1.1.1...v1.1.2) (2024-12-03)
 
 
