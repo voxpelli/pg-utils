@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/voxpelli/pg-utils/compare/v1.2.0...v1.2.1) (2024-12-04)
+
+
+### 🧹 Chores
+
+* **deps:** update dependency mocha to v11 ([#7](https://github.com/voxpelli/pg-utils/issues/7)) ([fc9ea77](https://github.com/voxpelli/pg-utils/commit/fc9ea771253fc8afbcc65041d9b9c4658422f21b))
+
 ## [1.2.0](https://github.com/voxpelli/pg-utils/compare/v1.1.2...v1.2.0) (2024-12-04)
 
 
