@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.0.0](https://github.com/voxpelli/pg-utils/compare/v1.2.0...v2.0.0) (2025-02-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* recreate the umzeption context on each run ([#14](https://github.com/voxpelli/pg-utils/issues/14))
+
+### 🩹 Fixes
+
+* recreate the umzeption context on each run ([#14](https://github.com/voxpelli/pg-utils/issues/14)) ([be1cae5](https://github.com/voxpelli/pg-utils/commit/be1cae54eba9842f56ce782f98b2c802fc47105b))
+
+
+### 🧹 Chores
+
+* **deps:** update dependency dotenv to ^16.4.7 ([#10](https://github.com/voxpelli/pg-utils/issues/10)) ([b35d214](https://github.com/voxpelli/pg-utils/commit/b35d214c963cc954265ab1d3a954c054554dcd56))
+* **deps:** update dependency mocha to v11 ([#7](https://github.com/voxpelli/pg-utils/issues/7)) ([fc9ea77](https://github.com/voxpelli/pg-utils/commit/fc9ea771253fc8afbcc65041d9b9c4658422f21b))
+* **deps:** update linting dependencies ([#12](https://github.com/voxpelli/pg-utils/issues/12)) ([e4d001e](https://github.com/voxpelli/pg-utils/commit/e4d001e972c7f84dc97ff9e9fda30329e1ec3b1e))
+* **deps:** update test dependencies ([#11](https://github.com/voxpelli/pg-utils/issues/11)) ([cce08ac](https://github.com/voxpelli/pg-utils/commit/cce08acc3a05218c6650738128e0bf2c24274adc))
+* **deps:** update type dependencies ([#9](https://github.com/voxpelli/pg-utils/issues/9)) ([10f19a2](https://github.com/voxpelli/pg-utils/commit/10f19a2703f98ee8c04a53efdb685acee33e4502))
+
 ## [1.2.0](https://github.com/voxpelli/pg-utils/compare/v1.1.2...v1.2.0) (2024-12-04)
 
 
