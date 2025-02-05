@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/voxpelli/pg-utils/compare/v2.0.0...v2.1.0) (2025-02-05)
+
+
+### 🌟 Features
+
+* expose `end()` ([85fa98c](https://github.com/voxpelli/pg-utils/commit/85fa98c51fd7cac09a58d0f776c9955f3ace853f))
+
 ## [2.0.0](https://github.com/voxpelli/pg-utils/compare/v1.2.0...v2.0.0) (2025-02-05)
 
 
