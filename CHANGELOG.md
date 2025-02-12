@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/voxpelli/pg-utils/compare/v2.1.0...v2.1.1) (2025-02-12)
+
+
+### 🧹 Chores
+
+* **deps:** update dev dependencies + fix linting ([#16](https://github.com/voxpelli/pg-utils/issues/16)) ([33fc718](https://github.com/voxpelli/pg-utils/commit/33fc718cd23d793aef3ace887feee368dfebf6a8))
+
 ## [2.1.0](https://github.com/voxpelli/pg-utils/compare/v2.0.0...v2.1.0) (2025-02-05)
 
 
