@@ -20,6 +20,7 @@ import {
 const pgHelpers = new PgTestHelpers({
   connectionString: 'postgres://user:pass@localhost/example',
   fixtureFolder: new URL('./fixtures', import.meta.url),
+  ignoreTables: ['xyz'],
   schema: new URL('./create-tables.sql', import.meta.url),,
   tablesWithDependencies: [
     'abc',
@@ -38,6 +39,9 @@ Class that creates a helpers instance
 new PgTestHelpers({
   connectionString: 'postgres://user:pass@localhost/example',
   fixtureFolder: new URL('./fixtures', import.meta.url),
+  ignoreTables: [
+    // ...
+  ],
   schema: new URL('./create-tables.sql', import.meta.url),,
   tablesWithDependencies: [
     // ...
@@ -53,6 +57,7 @@ new PgTestHelpers({
 
 * `connectionString` – _`string | _ – a connection string for the postgres database
 * `fixtureFolder` – _`[string | URL]`_ – _optional_ – the path to a folder of `.csv`-file fixtures named by their respective table
+* `ignoreTables` – _`[string[]]`_ – _optional_ – names of tables to ignore when dropping
 * `schema` – _`string | URL | Umzug`_ – an umzug instance that can be used to initialize tables or the schema itself or a `URL` to a text file containing the schema
 * `tablesWithDependencies` – _`[Array<string[] | string>]`_ – _optional_ – names of tables that depend on other tables. If some of these tables depend on each other, then use nested arrays to ensure that within the same array no two tables depend on each other
 
