@@ -21,7 +21,7 @@ const pgHelpers = new PgTestHelpers({
   connectionString: 'postgres://user:pass@localhost/example',
   fixtureFolder: new URL('./fixtures', import.meta.url),
   ignoreTables: ['xyz'],
-  schema: new URL('./create-tables.sql', import.meta.url),,
+  schema: new URL('./create-tables.sql', import.meta.url),
   tablesWithDependencies: [
     'abc',
     ['foo', 'bar'],
@@ -42,7 +42,7 @@ new PgTestHelpers({
   ignoreTables: [
     // ...
   ],
-  schema: new URL('./create-tables.sql', import.meta.url),,
+  schema: new URL('./create-tables.sql', import.meta.url),
   tablesWithDependencies: [
     // ...
   ]
