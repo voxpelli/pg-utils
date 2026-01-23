@@ -48,7 +48,7 @@
     "@types/chai": "^4.3.20",
     "@types/chai-as-promised": "^7.1.8",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^20.17.31",
+    "@types/node": "^20.19.30",
     "@types/pg-copy-streams": "^1.2.5",
     "@voxpelli/eslint-config": "^23.0.0",
     "@voxpelli/tsconfig": "^16.1.0",
@@ -63,7 +63,7 @@
     "mocha": "^11.1.0",
     "npm-run-all2": "^7.0.2",
     "type-coverage": "^2.29.7",
-    "typescript": "~5.8.3",
+    "typescript": "~5.9.3",
     "validate-conventional-commit": "^1.0.4"
   },
   "dependencies": {
