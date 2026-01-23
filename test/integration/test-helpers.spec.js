@@ -1,6 +1,7 @@
 /* eslint-disable unicorn/no-await-expression-member */
 
 import chai from 'chai';
+import sinon from 'sinon';
 
 import { PgTestHelpers } from '../../index.js';
 
@@ -175,6 +176,38 @@ describe('PgTestHelpers integration', function () {
             'value': 'Foobar value 2',
           },
         ]);
+    });
+
+    it('should handle table removal errors with descriptive messages', async () => {
+      const testHelpers = new PgTestHelpers({
+        connectionString,
+        schema: new URL('../create-complex-tables.pgsql', import.meta.url),
+        tablesWithDependencies: [
+          'foobar',
+          ['user_foo', 'user_bar'],
+        ],
+      });
+
+      await testHelpers.removeTables();
+      await testHelpers.initTables();
+
+      // Stub queryPromise to simulate an error when dropping the foobar table
+      const stub = sinon.stub(testHelpers, 'queryPromise');
+      stub.callThrough(); // Call the original by default
+      stub.withArgs(sinon.match(/foobar/)).rejects(new Error('Database connection lost'));
+
+      try {
+        await testHelpers.removeTables();
+        throw new Error('Should have thrown an error');
+      } catch (/** @type {unknown} */ err) {
+        const error = /** @type {Error & { cause?: Error }} */ (err);
+        error.message.should.equal('Failed to drop table: foobar');
+        error.should.have.property('cause');
+        error.cause?.message.should.equal('Database connection lost');
+      } finally {
+        stub.restore();
+        await testHelpers.removeTables();
+      }
     });
   });
 });
