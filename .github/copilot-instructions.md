@@ -186,7 +186,7 @@ sequenceDiagram
      ```javascript
      import { from as copyFrom } from 'pg-copy-streams';
      
-     const stream = client.query(copyFrom(`COPY "${table}" FROM STDIN CSV HEADER`));
+     const stream = client.query(copyFrom(`COPY ${tableName} FROM STDIN WITH (FORMAT csv, HEADER MATCH)`));
      await promisedPipeline(createReadStream(file), stream);
      ```
 
