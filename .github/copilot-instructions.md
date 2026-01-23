@@ -138,12 +138,12 @@ sequenceDiagram
    - Example:
      ```javascript
      /**
+      * @param {string | Pool} connection - PostgreSQL connection pool or connection string
       * @param {string | URL} path - The path to the CSV folder
-      * @param {Pool} pool - PostgreSQL connection pool
       * @param {string[]} [tablesWithDependencies] - Tables with dependencies
       * @returns {Promise<void>}
       */
-     export async function csvFromFolderToDb(pool, path, tablesWithDependencies) {
+     export async function csvFromFolderToDb(connection, path, tablesWithDependencies) {
        // implementation
      }
      ```
