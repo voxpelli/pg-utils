@@ -69,7 +69,7 @@
   "dependencies": {
     "@types/pg": "^8.11.10",
     "pg": "^8.13.1",
-    "pg-copy-streams": "^6.0.6",
+    "pg-copy-streams": "^7.0.0",
     "umzeption": "^0.4.1",
     "umzug": "^3.8.2"
   }
