@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.3.1](https://github.com/voxpelli/pg-utils/compare/v2.3.0...v2.3.1) (2026-01-23)
+
+
+### 🩹 Fixes
+
+* `#removeTablesByName` could cause deadlock ([e00c0de](https://github.com/voxpelli/pg-utils/commit/e00c0de3c0e54c6dc32b65d45b8c2ef2d3e3f396))
+
+
+### 🧹 Chores
+
+* **deps:** update dependency @voxpelli/tsconfig to v16 ([#31](https://github.com/voxpelli/pg-utils/issues/31)) ([922b844](https://github.com/voxpelli/pg-utils/commit/922b84452d33d8c086ba05a9f86945b750f6abc0))
+* **deps:** update dependency dotenv to v17 ([#30](https://github.com/voxpelli/pg-utils/issues/30)) ([78d0ab8](https://github.com/voxpelli/pg-utils/commit/78d0ab86646dfa97ec410b3ab79cfd23c1d25b08))
+* **deps:** update dependency mocha to ^11.7.5 ([#25](https://github.com/voxpelli/pg-utils/issues/25)) ([4a322db](https://github.com/voxpelli/pg-utils/commit/4a322db64e43909ad247825ead87b220300f0daa))
+* **deps:** update dependency npm-run-all2 to v8 ([#27](https://github.com/voxpelli/pg-utils/issues/27)) ([9445710](https://github.com/voxpelli/pg-utils/commit/9445710c5f9e6f2f51157800804f2fed8f46af33))
+* **deps:** update dependency pg-copy-streams to v7 ([#28](https://github.com/voxpelli/pg-utils/issues/28)) ([e9620a6](https://github.com/voxpelli/pg-utils/commit/e9620a6406fee5f8fab034faab3c0a8b0fb8634d))
+* **deps:** update linting dependencies ([#26](https://github.com/voxpelli/pg-utils/issues/26)) ([202413e](https://github.com/voxpelli/pg-utils/commit/202413eeea64fc92cbac0227f829af5d34d2ee4e))
+* **deps:** update type dependencies ([#24](https://github.com/voxpelli/pg-utils/issues/24)) ([d79f856](https://github.com/voxpelli/pg-utils/commit/d79f8562cd41b3e915da1083179ea7751543baa7))
+* opt-in husky setup ([507d39a](https://github.com/voxpelli/pg-utils/commit/507d39a9daf88c89c7368c239c119e9c1599647d))
+* streamline knip config ([5eb5624](https://github.com/voxpelli/pg-utils/commit/5eb562445e5f0448ac4b67bfc08a1428b64c8740))
+
 ## [2.3.0](https://github.com/voxpelli/pg-utils/compare/v2.2.0...v2.3.0) (2025-04-29)
 
 
