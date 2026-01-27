@@ -27,6 +27,18 @@ const pgHelpers = new PgTestHelpers({
     ['foo', 'bar'],
   ]
 });
+
+try {
+  // The helper automatically acquires an exclusive database lock
+  // on the first call to initTables(), insertFixtures(), or removeTables()
+  // to prevent concurrent access between tests during test operations.
+  await pgHelpers.initTables();
+  await pgHelpers.insertFixtures();
+} finally {
+  // Always release the lock and close connections,
+  // even if a test or setup step throws an error
+  await pgHelpers.end();
+}
 ```
 
 ## PgTestHelpers
@@ -63,9 +75,14 @@ new PgTestHelpers({
 
 ### Methods
 
-* `initTables() => Promise<void>` – sets up all of the tables
-* `insertFixtures() => Promise<void>` – inserts all the fixtures data into the tables (only usable if `fixtureFolder` has been set)
-* `removeTables() => Promise<void>` – removes all of the tables (starting with `tablesWithDependencies`)
+* `initTables() => Promise<void>` – sets up all of the tables. Automatically acquires an exclusive database lock on first call.
+* `insertFixtures() => Promise<void>` – inserts all the fixtures data into the tables (only usable if `fixtureFolder` has been set). Automatically acquires an exclusive database lock on first call.
+* `removeTables() => Promise<void>` – removes all of the tables (starting with `tablesWithDependencies`). Automatically acquires an exclusive database lock on first call.
+* `end() => Promise<void>` – releases the database lock (if acquired) and closes all database connections. **Always call this when done** to properly clean up resources.
+
+#### Database Locking
+
+The `PgTestHelpers` class uses [PostgreSQL advisory locks](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS) to ensure exclusive database access during test operations. The lock is automatically acquired on the first call to `initTables()`, `insertFixtures()`, or `removeTables()`, and is held until `end()` is called. This prevents multiple test suites from interfering with each other when using the same database.
 
 ## csvFromFolderToDb()
 
