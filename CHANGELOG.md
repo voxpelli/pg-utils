@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.0.0](https://github.com/voxpelli/pg-utils/compare/v2.3.1...v3.0.0) (2026-01-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* add locking to stop concurrent test runs ([#40](https://github.com/voxpelli/pg-utils/issues/40))
+
+### 🌟 Features
+
+* add locking to stop concurrent test runs ([#40](https://github.com/voxpelli/pg-utils/issues/40)) ([60a3d71](https://github.com/voxpelli/pg-utils/commit/60a3d7113074be212d845d6271837b0ccfb67c8a))
+
+
+### 📚 Documentation
+
+* fix type markdown ([d0b6222](https://github.com/voxpelli/pg-utils/commit/d0b622236d64e93d0152dd42f1b6f5ba05cbbb8e))
+
 ## [2.3.1](https://github.com/voxpelli/pg-utils/compare/v2.3.0...v2.3.1) (2026-01-23)
 
 
