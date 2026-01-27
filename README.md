@@ -30,7 +30,7 @@ const pgHelpers = new PgTestHelpers({
 
 // The helper automatically acquires an exclusive database lock
 // on the first call to initTables(), insertFixtures(), or removeTables()
-// to prevent concurrent access inbetween tests during test operations.
+// to prevent concurrent access between tests during test operations.
 await pgHelpers.initTables();
 await pgHelpers.insertFixtures();
 
