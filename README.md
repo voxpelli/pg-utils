@@ -67,7 +67,7 @@ new PgTestHelpers({
 
 ### PgTestHelpersOptions
 
-* `connectionString` – _`string | _ – a connection string for the postgres database
+* `connectionString` – _`string`_ – a connection string for the postgres database
 * `fixtureFolder` – _`[string | URL]`_ – _optional_ – the path to a folder of `.csv`-file fixtures named by their respective table
 * `ignoreTables` – _`[string[]]`_ – _optional_ – names of tables to ignore when dropping
 * `schema` – _`string | URL | Umzug`_ – an umzug instance that can be used to initialize tables or the schema itself or a `URL` to a text file containing the schema
