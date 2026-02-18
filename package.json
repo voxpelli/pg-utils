@@ -1,6 +1,6 @@
 {
   "name": "@voxpelli/pg-utils",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": " My personal database utils / helpers for Postgres",
   "homepage": "http://github.com/voxpelli/pg-utils",
   "repository": {
