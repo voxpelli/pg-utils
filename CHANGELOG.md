@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.1](https://github.com/voxpelli/pg-utils/compare/v3.0.0...v3.0.1) (2026-02-18)
+
+
+### 🩹 Fixes
+
+* client wasn't released on csv import error ([#42](https://github.com/voxpelli/pg-utils/issues/42)) ([5bc84fa](https://github.com/voxpelli/pg-utils/commit/5bc84fac0f10d4c722200eec5be4a905b86b6a0a))
+
+
+### 🧹 Chores
+
+* **deps:** update dependencies ([#46](https://github.com/voxpelli/pg-utils/issues/46)) ([963bbd7](https://github.com/voxpelli/pg-utils/commit/963bbd73fab0502711846dddc180b4ff7c827527))
+
 ## [3.0.0](https://github.com/voxpelli/pg-utils/compare/v2.3.1...v3.0.0) (2026-01-27)
 
 
