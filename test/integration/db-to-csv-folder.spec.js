@@ -13,13 +13,15 @@ chai.should();
 describe('dbToCsvFolder integration', function () {
   this.timeout(15000);
 
-  const testHelpers = new PgTestHelpers({
-    connectionString,
-    fixtureFolder: new URL('../simple-fixtures', import.meta.url),
-    schema: new URL('../create-simple-tables.pgsql', import.meta.url),
-  });
+  /** @type {import('../../index.js').PgTestHelpers} */
+  let testHelpers;
 
   before(async () => {
+    testHelpers = new PgTestHelpers({
+      connectionString,
+      fixtureFolder: new URL('../simple-fixtures', import.meta.url),
+      schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+    });
     await testHelpers.removeTables();
     await testHelpers.initTables();
     await testHelpers.insertFixtures();
@@ -44,7 +46,7 @@ describe('dbToCsvFolder integration', function () {
       const csv = await readFile(pathModule.join(outputDir, 'users.csv'), 'utf8');
       const lines = csv.trimEnd().split('\n');
 
-      lines[0].should.equal('id,name,email,role,created_at,last_edited_at');
+      /** @type {string} */ (lines[0]).should.equal('id,name,email,role,created_at,last_edited_at');
       lines.should.have.lengthOf(3); // header + 2 data rows
     } finally {
       await pool.end();
@@ -66,7 +68,7 @@ describe('dbToCsvFolder integration', function () {
       const csv = await readFile(pathModule.join(outputDir, 'users.csv'), 'utf8');
       const lines = csv.trimEnd().split('\n');
 
-      lines[0].should.equal('id,name,email,role,created_at,last_edited_at');
+      /** @type {string} */ (lines[0]).should.equal('id,name,email,role,created_at,last_edited_at');
       lines.should.have.lengthOf(3);
     } finally {
       if (outputDir) {
@@ -115,7 +117,7 @@ describe('dbToCsvFolder integration', function () {
       emptyRows.should.have.lengthOf(0);
 
       // Re-import
-      await csvFromFolderToDb(pool, outputDir, ['users']);
+      await csvFromFolderToDb(pool, outputDir);
 
       // Verify data matches
       const { rows } = await pool.query('SELECT * FROM users ORDER BY name');
