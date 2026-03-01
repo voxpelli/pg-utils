@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { setTimeout as delay } from 'node:timers/promises';
 import { Pool } from 'pg';
 
-import { csvFromFolderToDb } from '../../index.js';
+import { csvFromFolderToDb, PgTestHelpers } from '../../index.js';
 
 import { connectionString } from '../db.js';
 
@@ -62,6 +62,56 @@ describe('csvFromFolderToDb integration', () => {
     } finally {
       await rm(fixturePath, { recursive: true, force: true });
       await pool.end();
+    }
+  });
+
+  it('should import fixtures using tableLoadOrder (parent-first)', async function () {
+    this.timeout(10000);
+
+    const testHelpers = new PgTestHelpers({
+      connectionString,
+      schema: new URL('../create-complex-tables.pgsql', import.meta.url),
+      tableLoadOrder: [
+        ['user_foo', 'user_bar'],
+        'foobar',
+      ],
+    });
+
+    const pool = new Pool({ connectionString });
+
+    try {
+      await testHelpers.removeTables();
+      await testHelpers.initTables();
+
+      // Parent-first: users loaded before user_foo/user_bar, which load before foobar
+      await csvFromFolderToDb(
+        pool,
+        new URL('../complex-fixtures', import.meta.url),
+        { tableLoadOrder: ['user_foo', 'user_bar', 'foobar'] }
+      );
+
+      const { rows: foobarRows } = await pool.query('SELECT * FROM foobar');
+      foobarRows.should.have.lengthOf(2);
+
+      const { rows: userRows } = await pool.query('SELECT * FROM users');
+      userRows.should.have.lengthOf(2);
+    } finally {
+      await testHelpers.removeTables();
+      await testHelpers.end();
+      await pool.end();
+    }
+  });
+
+  it('should throw when both tableLoadOrder and tablesWithDependencies are provided', async () => {
+    try {
+      await csvFromFolderToDb(
+        connectionString,
+        new URL('../simple-fixtures', import.meta.url),
+        { tableLoadOrder: ['users'], tablesWithDependencies: ['users'] }
+      );
+      throw new Error('Expected to throw');
+    } catch (/** @type {unknown} */ err) {
+      /** @type {Error} */ (err).message.should.match(/Cannot specify both/);
     }
   });
 });
