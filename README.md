@@ -15,6 +15,7 @@ My personal database utils / helpers for Postgres
 ```javascript
 import {
   csvFromFolderToDb,
+  dbToCsvFolder,
   PgTestHelpers,
 } from '@voxpelli/pg-utils';
 
@@ -23,9 +24,9 @@ const pgHelpers = new PgTestHelpers({
   fixtureFolder: new URL('./fixtures', import.meta.url),
   ignoreTables: ['xyz'],
   schema: new URL('./create-tables.sql', import.meta.url),
-  tablesWithDependencies: [
-    'abc',
+  tableLoadOrder: [
     ['foo', 'bar'],
+    'abc',
   ]
 });
 
@@ -56,7 +57,7 @@ new PgTestHelpers({
     // ...
   ],
   schema: new URL('./create-tables.sql', import.meta.url),
-  tablesWithDependencies: [
+  tableLoadOrder: [
     // ...
   ]
 });
@@ -72,13 +73,14 @@ new PgTestHelpers({
 * `fixtureFolder` – _`[string | URL]`_ – _optional_ – the path to a folder of `.csv`-file fixtures named by their respective table
 * `ignoreTables` – _`[string[]]`_ – _optional_ – names of tables to ignore when dropping
 * `schema` – _`string | URL | Umzug`_ – an umzug instance that can be used to initialize tables or the schema itself or a `URL` to a text file containing the schema
-* `tablesWithDependencies` – _`[Array<string[] | string>]`_ – _optional_ – names of tables that depend on other tables. If some of these tables depend on each other, then use nested arrays to ensure that within the same array no two tables depend on each other
+* `tableLoadOrder` – _`[Array<string[] | string>]`_ – _optional_ – tables in parent-first insertion order: the first item is loaded first and dropped last. Use nested arrays to group tables that can be dropped in parallel. Mutually exclusive with `tablesWithDependencies`.
+* `tablesWithDependencies` – _`[Array<string[] | string>]`_ – _optional_ – **Deprecated:** use `tableLoadOrder` instead. Tables in leaf-first deletion order: the first item is dropped first and loaded last.
 
 ### Methods
 
 * `initTables() => Promise<void>` – sets up all of the tables. Automatically acquires an exclusive database lock on first call.
 * `insertFixtures() => Promise<void>` – inserts all the fixtures data into the tables (only usable if `fixtureFolder` has been set). Automatically acquires an exclusive database lock on first call.
-* `removeTables() => Promise<void>` – removes all of the tables (starting with `tablesWithDependencies`). Automatically acquires an exclusive database lock on first call.
+* `removeTables() => Promise<void>` – removes all of the tables (respecting `tableLoadOrder` / `tablesWithDependencies` ordering). Automatically acquires an exclusive database lock on first call.
 * `end() => Promise<void>` – releases the database lock (if acquired) and closes all database connections. **Always call this when done** to properly clean up resources.
 
 #### Database Locking
@@ -92,14 +94,38 @@ Imports data into tables from a folder of CSV files. All files will be imported 
 ### Syntax
 
 ```ts
-csvFromFolderToDb(pool, path, [tablesWithDependencies]) => Promise<void>
+csvFromFolderToDb(pool, path, [options]) => Promise<void>
 ```
 
 ### Arguments
 
 * `pool` – _`string | pg.Pool`_ – a postgres pool to use for the queries or a connection string that will be used to create one
 * `path` – _`string | URL`_ – the path to the folder that contains the CSV:s named by their table names
-* `tablesWithDependencies` – _`[string[]]`_ – _optional_ – names of tables that depend on other tables. The first name in this list will have its fixtures inserted last
+* `options` – _`object`_ – _optional_ – ordering options (also accepts a `string[]` for backwards compatibility, treated as `tablesWithDependencies`)
+  * `tableLoadOrder` – _`string[]`_ – tables in parent-first insertion order: the first table is loaded first. Mutually exclusive with `tablesWithDependencies`.
+  * `tablesWithDependencies` – _`string[]`_ – **Deprecated:** use `tableLoadOrder` instead. Tables in leaf-first deletion order: the first table is loaded last.
+
+### Returns
+
+`Promise` that resolves on completion
+
+## dbToCsvFolder()
+
+Exports database tables to CSV files in a folder. Each table is written as `<table>.csv` with a header row.
+
+### Syntax
+
+```ts
+dbToCsvFolder(connection, outputPath, tables, [options]) => Promise<void>
+```
+
+### Arguments
+
+* `connection` – _`string | pg.Pool`_ – a postgres pool to use for the queries or a connection string that will be used to create one
+* `outputPath` – _`string | URL`_ – the directory to write CSV files into (created if it does not exist)
+* `tables` – _`string[]`_ – explicit list of table names to export
+* `options` – _`object`_ – _optional_
+  * `orderBy` – _`string`_ – SQL `ORDER BY` expression for deterministic output (default: `'1'`, i.e. the first column)
 
 ### Returns
 
