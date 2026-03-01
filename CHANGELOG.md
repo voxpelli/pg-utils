@@ -1,5 +1,25 @@
 # Changelog
 
+## [3.1.0](https://github.com/voxpelli/pg-utils/compare/v3.0.1...v3.1.0) (2026-03-01)
+
+
+### 🌟 Features
+
+* add dbToCsvFolder export function ([ba6ae2d](https://github.com/voxpelli/pg-utils/commit/ba6ae2d3fbd4990f7a5940c98709a4848134e64d))
+* add tableLoadOrder as intuitive replacement for tablesWithDependencies ([db8383e](https://github.com/voxpelli/pg-utils/commit/db8383e887e0a77013d65edf3d951fb30fb05c18))
+
+
+### 🩹 Fixes
+
+* clear lock client on acquisition failure ([dabdaf6](https://github.com/voxpelli/pg-utils/commit/dabdaf6f6aa72662bfc83cf4c388389acbbd30c7))
+* escape SQL identifiers to prevent injection ([9f85b5b](https://github.com/voxpelli/pg-utils/commit/9f85b5b36fee4e981848ae963e5bef24f9c1410a))
+
+
+### 📚 Documentation
+
+* add DeepWiki badge to README ([9c9ffe6](https://github.com/voxpelli/pg-utils/commit/9c9ffe68dc4ea95a27b6ed214a8e88813a59d27d))
+* document dbToCsvFolder and tableLoadOrder ([7ad5786](https://github.com/voxpelli/pg-utils/commit/7ad57867b8bc1b0757a5e0fa24e30e54d3fd2a11))
+
 ## [3.0.1](https://github.com/voxpelli/pg-utils/compare/v3.0.0...v3.0.1) (2026-02-18)
 
 
