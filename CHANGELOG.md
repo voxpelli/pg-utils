@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.1.1](https://github.com/voxpelli/pg-utils/compare/v3.1.0...v3.1.1) (2026-03-12)
+
+
+### 🩹 Fixes
+
+* ensure proper cleanup during table operations ([#50](https://github.com/voxpelli/pg-utils/issues/50)) ([d871688](https://github.com/voxpelli/pg-utils/commit/d8716882a63cd30c4169126059f47cf6eb90bf7a))
+
+
+### 🧹 Chores
+
+* **deps:** update dependency @types/node to ^20.19.37 ([#51](https://github.com/voxpelli/pg-utils/issues/51)) ([cd4775a](https://github.com/voxpelli/pg-utils/commit/cd4775ac5c996dd38e5029c900b945d1590cf1a7))
+* **deps:** update dependency c8 to v11 ([#54](https://github.com/voxpelli/pg-utils/issues/54)) ([492bd49](https://github.com/voxpelli/pg-utils/commit/492bd49850b2abd579881608664a95a77c5eb2a7))
+* **deps:** update linting dependencies ([#53](https://github.com/voxpelli/pg-utils/issues/53)) ([c5e29fc](https://github.com/voxpelli/pg-utils/commit/c5e29fce5a3d6f72e89ce9e6c1becc204f374128))
+
 ## [3.1.0](https://github.com/voxpelli/pg-utils/compare/v3.0.1...v3.1.0) (2026-03-01)
 
 
