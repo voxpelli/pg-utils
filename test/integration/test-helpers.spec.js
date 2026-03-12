@@ -4,6 +4,8 @@
 import chai from 'chai';
 import sinon from 'sinon';
 
+import { messageWithCauses } from 'pony-cause';
+
 import { PgTestHelpers } from '../../index.js';
 
 import { connectionString } from '../db.js';
@@ -229,9 +231,7 @@ describe('PgTestHelpers integration', function () {
           throw new Error('Should have thrown an error');
         } catch (/** @type {unknown} */ err) {
           const error = /** @type {Error & { cause?: Error }} */ (err);
-          error.message.should.equal('Failed to drop table: foobar');
-          error.should.have.property('cause');
-          error.cause?.message.should.equal('Database connection lost');
+          messageWithCauses(error).should.equal('Failed to remove tables: Failed to drop table: foobar: Database connection lost');
         } finally {
           stub.restore();
           await testHelpers.removeTables();
