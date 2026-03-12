@@ -63,6 +63,7 @@
     "knip": "^5.84.0",
     "mocha": "^11.7.5",
     "npm-run-all2": "^8.0.4",
+    "pony-cause": "^2.1.11",
     "sinon": "^21.0.1",
     "type-coverage": "^2.29.7",
     "typescript": "~5.9.3",
