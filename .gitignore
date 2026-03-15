@@ -17,6 +17,9 @@
 # Library specific ones
 /test/.env
 
+# Claude Code local state
+.claude/
+
 # Dolt database files (added by bd init)
 .dolt/
 *.db
