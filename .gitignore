@@ -19,6 +19,8 @@
 
 # Claude Code local state
 .claude/
+UPSTREAM-*.md
+RETRO-*.md
 
 # Dolt database files (added by bd init)
 .dolt/
