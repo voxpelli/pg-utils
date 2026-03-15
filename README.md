@@ -34,19 +34,38 @@ try {
 }
 ```
 
-Or use the `setup()` convenience method with `await using` for automatic cleanup:
+Or use `pgTestSetup` / `pgTestSetupFor` for one-step setup with automatic cleanup:
 
 ```javascript
-{
-  await using pgHelpers = await new PgTestHelpers({
+import { pgTestSetupFor } from '@voxpelli/pg-utils';
+
+// With node:test — cleanup registered via t.after()
+it('inserts a record', async (t) => {
+  const helpers = await pgTestSetupFor({
     connectionString: 'postgres://user:pass@localhost/example',
     schema: new URL('./create-tables.sql', import.meta.url),
     fixtureFolder: new URL('./fixtures', import.meta.url),
-  }).setup();
+  }, t);
 
   // Tables created, fixtures loaded.
-  // pgHelpers.end() is called automatically when the block exits.
-}
+  // helpers.end() called automatically after test via t.after()
+});
+```
+
+```javascript
+import { pgTestSetup } from '@voxpelli/pg-utils';
+
+// With await using — cleanup via Symbol.asyncDispose
+it('inserts a record', async () => {
+  await using helpers = await pgTestSetup({
+    connectionString: 'postgres://user:pass@localhost/example',
+    schema: new URL('./create-tables.sql', import.meta.url),
+    fixtureFolder: new URL('./fixtures', import.meta.url),
+  });
+
+  // Tables created, fixtures loaded.
+  // helpers.end() called automatically when scope exits.
+});
 ```
 
 ## PgTestHelpers
@@ -88,7 +107,7 @@ new PgTestHelpers({
 
 ### Methods
 
-* `setup() => Promise<this>` – convenience method that runs the standard sequence: `removeTables()`, `initTables()`, and `insertFixtures()` (when `fixtureFolder` is set). Returns `this` so it can be chained with `await using`.
+* `setup() => Promise<this>` – convenience method that runs the standard sequence: `removeTables()`, `initTables()`, and `insertFixtures()` (when `fixtureFolder` is set). Returns `this` so it can be chained with `await using`. Calls `end()` internally on failure to prevent pool leaks.
 * `initTables() => Promise<void>` – sets up all of the tables. Automatically acquires an exclusive database lock on first call.
 * `insertFixtures() => Promise<void>` – inserts all the fixtures data into the tables (only usable if `fixtureFolder` has been set). Automatically acquires an exclusive database lock on first call.
 * `removeTables() => Promise<void>` – removes all of the tables (respecting `tableLoadOrder` / `tablesWithDependencies` ordering). Automatically acquires an exclusive database lock on first call. **Note:** this drops all tables in the `public` schema, not just those defined in `schema`.
@@ -107,81 +126,98 @@ When using `node:test` or other parallel test runners, all test files share the 
 
 If your test files truly need parallel execution, consider using separate databases per test file and setting a unique `lockId` per database.
 
-## Using with node:test
+## pgTestSetup()
 
-### Per-test with `await using`
+Creates and sets up a `PgTestHelpers` instance in one step. Use with `await using` for automatic cleanup.
 
-The simplest pattern when each test needs a fresh database state. The `setup()` method runs `removeTables()`, `initTables()`, and `insertFixtures()` in one call, then `await using` calls `end()` automatically when the test exits:
+### Syntax
 
-```javascript
-import { describe, it } from 'node:test';
-import { PgTestHelpers } from '@voxpelli/pg-utils';
-
-describe('my feature', () => {
-  it('inserts a record', async () => {
-    await using helpers = await new PgTestHelpers({
-      connectionString: process.env.DATABASE_URL,
-      schema: new URL('./schema.sql', import.meta.url),
-    }).setup();
-
-    // Tables are ready. helpers.end() called automatically on scope exit.
-    const { rows } = await helpers.queryPromise('SELECT 1 AS val');
-  });
-});
+```ts
+pgTestSetup(options) => Promise<PgTestHelpers>
 ```
 
-**Trade-off:** each test pays the full setup cost (drop + create + load fixtures). For suites with many tests against the same fixture data, use the `beforeEach`/`afterEach` pattern instead.
+### Arguments
 
-### Per-test with `t.after()`
+* `options` – _[`PgTestHelpersOptions`](#pgtesthelpersoptions)_ – same options as the `PgTestHelpers` constructor
 
-An alternative to `await using` that works without `Symbol.asyncDispose`. The test context's `after()` method registers a cleanup callback that runs after the test completes, even on failure:
+## pgTestSetupFor()
+
+Creates and sets up a `PgTestHelpers` instance, registering cleanup via `t.after()`. No `await using` or `afterEach` needed.
+
+### Syntax
+
+```ts
+pgTestSetupFor(options, t) => Promise<PgTestHelpers>
+```
+
+### Arguments
+
+* `options` – _[`PgTestHelpersOptions`](#pgtesthelpersoptions)_ – same options as the `PgTestHelpers` constructor
+* `t` – _`{ after?: Function }`_ – a test context with an `after()` method (e.g., node:test's `TestContext`). Cleanup is registered via `t.after(() => helpers.end())`. Throws `TypeError` if `after` is missing.
+
+## Using with node:test
+
+### Per-test with `pgTestSetupFor` (recommended)
+
+The simplest pattern. `pgTestSetupFor` creates and sets up the helpers, then registers cleanup via `t.after()` — no `afterEach` or `await using` needed:
 
 ```javascript
 import { describe, it } from 'node:test';
-import { PgTestHelpers } from '@voxpelli/pg-utils';
+import { pgTestSetupFor } from '@voxpelli/pg-utils';
 
 describe('my feature', () => {
   it('inserts a record', async (t) => {
-    const helpers = await new PgTestHelpers({
+    const helpers = await pgTestSetupFor({
       connectionString: process.env.DATABASE_URL,
       schema: new URL('./schema.sql', import.meta.url),
-    }).setup();
+    }, t);
 
-    t.after(() => helpers.end());
-
-    // Test body...
+    // Tables are ready. helpers.end() called automatically via t.after()
   });
 });
 ```
 
-### Suite-level with `beforeEach`/`afterEach`
+### Per-test with `await using`
 
-Use hooks when the `helpers` reference is needed outside the test body — for example, to pass `helpers.queryPromise` to seed helpers or to share the setup across multiple tests. `await using` cannot be used in hooks because the scope exits when the hook function returns, before any tests run.
+When you prefer scope-based cleanup or your test framework doesn't expose a test context:
+
+```javascript
+import { describe, it } from 'node:test';
+import { pgTestSetup } from '@voxpelli/pg-utils';
+
+describe('my feature', () => {
+  it('inserts a record', async () => {
+    await using helpers = await pgTestSetup({
+      connectionString: process.env.DATABASE_URL,
+      schema: new URL('./schema.sql', import.meta.url),
+    });
+
+    // Tables are ready. helpers.end() called automatically on scope exit.
+  });
+});
+```
+
+**Trade-off:** each test pays the full setup cost (drop + create + load fixtures). For suites with many tests against the same fixture data, use `beforeEach` with `pgTestSetupFor` instead.
+
+### Suite-level with `beforeEach` + `pgTestSetupFor`
+
+Use `pgTestSetupFor` inside `beforeEach` when the `helpers` reference is needed across multiple tests. The `t.after()` registration eliminates the need for a separate `afterEach` for helpers cleanup:
 
 ```javascript
 import assert from 'node:assert/strict';
-import { afterEach, beforeEach, describe, it } from 'node:test';
-import { PgTestHelpers } from '@voxpelli/pg-utils';
+import { beforeEach, describe, it } from 'node:test';
+import { pgTestSetupFor } from '@voxpelli/pg-utils';
 
 describe('my feature', () => {
-  /** @type {PgTestHelpers} */
+  /** @type {import('@voxpelli/pg-utils').PgTestHelpers} */
   let helpers;
 
-  beforeEach(async () => {
-    try {
-      helpers = await new PgTestHelpers({
-        connectionString: process.env.DATABASE_URL,
-        schema: new URL('./schema.sql', import.meta.url),
-        fixtureFolder: new URL('./fixtures', import.meta.url),
-      }).setup();
-    } catch (err) {
-      await helpers.end();
-      throw err;
-    }
-  });
-
-  afterEach(async () => {
-    await helpers.end();
+  beforeEach(async (t) => {
+    helpers = await pgTestSetupFor({
+      connectionString: process.env.DATABASE_URL,
+      schema: new URL('./schema.sql', import.meta.url),
+      fixtureFolder: new URL('./fixtures', import.meta.url),
+    }, t);
   });
 
   it('reads a record', async () => {
@@ -191,17 +227,18 @@ describe('my feature', () => {
 });
 ```
 
-The `try/catch` in `beforeEach` ensures `end()` is called if setup throws. Because `end()` is idempotent, calling it in both the catch block and `afterEach` is safe.
+`setup()` calls `end()` internally on failure, so no `try/catch` is needed in `beforeEach`. If you need additional cleanup beyond helpers (e.g., `app.close()`), add an `afterEach` for that.
 
 ## Factory pattern
 
-For projects with multiple test files sharing the same database configuration, centralise `PgTestHelpers` construction in a factory function:
+For projects with multiple test files sharing the same database configuration, centralise setup in a factory function:
 
 ```javascript
 // tools/test-helpers.js
-import { PgTestHelpers } from '@voxpelli/pg-utils';
+import { pgTestSetupFor } from '@voxpelli/pg-utils';
 
-export const testHelpers = () => new PgTestHelpers({
+/** @param {{ after?: (fn: () => Promise<void>) => void }} t */
+export const testSetup = (t) => pgTestSetupFor({
   connectionString: process.env.DATABASE_URL,
   schema: new URL('../schema.sql', import.meta.url),
   fixtureFolder: new URL('../test/fixtures', import.meta.url),
@@ -209,31 +246,24 @@ export const testHelpers = () => new PgTestHelpers({
     'accounts',
     ['posts', 'comments'],
   ],
-});
+}, t);
 ```
 
 Test files become minimal:
 
 ```javascript
-import { afterEach, beforeEach, describe, it } from 'node:test';
-import { testHelpers } from '../tools/test-helpers.js';
+import { beforeEach, describe, it } from 'node:test';
+import { testSetup } from '../tools/test-helpers.js';
 
 describe('posts', () => {
   /** @type {import('@voxpelli/pg-utils').PgTestHelpers} */
   let helpers;
 
-  beforeEach(async () => {
-    try {
-      helpers = await testHelpers().setup();
-    } catch (err) {
-      await helpers.end();
-      throw err;
-    }
+  beforeEach(async (t) => {
+    helpers = await testSetup(t);
   });
 
-  afterEach(async () => {
-    await helpers.end();
-  });
+  // No afterEach needed — cleanup registered via t.after()
 
   // ... tests using helpers.queryPromise ...
 });
