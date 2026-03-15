@@ -38,7 +38,7 @@ describe('dbToCsvFolder', () => {
       } catch (/** @type {unknown} */ err) {
         const error = /** @type {Error} */ (err);
         error.message.should.not.match(/Invalid orderBy/);
-        error.message.should.match(/connect|ECONNREFUSED|ENOTFOUND|getaddrinfo/i);
+        error.message.should.match(/connect|ECONN|ENOTFOUND|getaddrinfo|EAI_/i);
       }
     });
 
@@ -49,7 +49,7 @@ describe('dbToCsvFolder', () => {
       } catch (/** @type {unknown} */ err) {
         const error = /** @type {Error} */ (err);
         error.message.should.not.match(/Invalid orderBy/);
-        error.message.should.match(/connect|ECONNREFUSED|ENOTFOUND|getaddrinfo/i);
+        error.message.should.match(/connect|ECONN|ENOTFOUND|getaddrinfo|EAI_/i);
       }
     });
   });

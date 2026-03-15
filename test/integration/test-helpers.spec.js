@@ -272,20 +272,23 @@ describe('PgTestHelpers integration', function () {
           return { order: 'second' };
         });
 
-      const { order } = await Promise.race([
-        firstInit,
-        secondInit,
-      ]);
+      try {
+        const { order } = await Promise.race([
+          firstInit,
+          secondInit,
+        ]);
 
-      firstCompleted.should.not.equal(secondCompleted, 'Only one should have completed');
+        firstCompleted.should.not.equal(secondCompleted, 'Only one should have completed');
 
-      await (order === 'first' ? testHelpers1 : testHelpers2).end();
+        await (order === 'first' ? testHelpers1 : testHelpers2).end();
 
-      await (order === 'first' ? secondInit : firstInit);
+        await (order === 'first' ? secondInit : firstInit);
 
-      firstCompleted.should.equal(secondCompleted, 'Both should have completed');
-
-      await (order === 'first' ? testHelpers2 : testHelpers1).end();
+        firstCompleted.should.equal(secondCompleted, 'Both should have completed');
+      } finally {
+        await testHelpers1.end();
+        await testHelpers2.end();
+      }
     });
   });
 
