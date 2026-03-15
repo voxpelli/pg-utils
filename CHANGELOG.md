@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.0.0](https://github.com/voxpelli/pg-utils/compare/v3.1.1...v4.0.0) (2026-03-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* Requires Node.js >= 22.0.0 (dropped Node.js 20 support).
+
+### 🌟 Features
+
+* harden lock lifecycle, add pgTestSetup/pgTestSetupFor factories, configurable lockId and timeouts ([#56](https://github.com/voxpelli/pg-utils/issues/56)) ([01df6c4](https://github.com/voxpelli/pg-utils/commit/01df6c40ec578532f761aeb27eaee90ef347783c))
+
+
+### 🧹 Chores
+
+* **deps:** update dependency sinon to ^21.0.2 ([#52](https://github.com/voxpelli/pg-utils/issues/52)) ([8deebd3](https://github.com/voxpelli/pg-utils/commit/8deebd36764e3c4a692df862425fec30723bd676))
+
 ## [3.1.1](https://github.com/voxpelli/pg-utils/compare/v3.1.0...v3.1.1) (2026-03-12)
 
 
