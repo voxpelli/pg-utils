@@ -13,11 +13,7 @@ My personal database utils / helpers for Postgres
 ## Usage
 
 ```javascript
-import {
-  csvFromFolderToDb,
-  dbToCsvFolder,
-  PgTestHelpers,
-} from '@voxpelli/pg-utils';
+import { PgTestHelpers } from '@voxpelli/pg-utils';
 
 const pgHelpers = new PgTestHelpers({
   connectionString: 'postgres://user:pass@localhost/example',
@@ -31,16 +27,45 @@ const pgHelpers = new PgTestHelpers({
 });
 
 try {
-  // The helper automatically acquires an exclusive database lock
-  // on the first call to initTables(), insertFixtures(), or removeTables()
-  // to prevent concurrent access between tests during test operations.
   await pgHelpers.initTables();
   await pgHelpers.insertFixtures();
 } finally {
-  // Always release the lock and close connections,
-  // even if a test or setup step throws an error
   await pgHelpers.end();
 }
+```
+
+Or use `pgTestSetup` / `pgTestSetupFor` for one-step setup with automatic cleanup:
+
+```javascript
+import { pgTestSetupFor } from '@voxpelli/pg-utils';
+
+// With node:test — cleanup registered via t.after()
+it('inserts a record', async (t) => {
+  const helpers = await pgTestSetupFor({
+    connectionString: 'postgres://user:pass@localhost/example',
+    schema: new URL('./create-tables.sql', import.meta.url),
+    fixtureFolder: new URL('./fixtures', import.meta.url),
+  }, t);
+
+  // Tables created, fixtures loaded.
+  // helpers.end() called automatically after test via t.after()
+});
+```
+
+```javascript
+import { pgTestSetup } from '@voxpelli/pg-utils';
+
+// With await using — cleanup via Symbol.asyncDispose
+it('inserts a record', async () => {
+  await using helpers = await pgTestSetup({
+    connectionString: 'postgres://user:pass@localhost/example',
+    schema: new URL('./create-tables.sql', import.meta.url),
+    fixtureFolder: new URL('./fixtures', import.meta.url),
+  });
+
+  // Tables created, fixtures loaded.
+  // helpers.end() called automatically when scope exits.
+});
 ```
 
 ## PgTestHelpers
@@ -71,21 +96,179 @@ new PgTestHelpers({
 
 * `connectionString` – _`string`_ – a connection string for the postgres database
 * `fixtureFolder` – _`[string | URL]`_ – _optional_ – the path to a folder of `.csv`-file fixtures named by their respective table
+* `idleInTransactionTimeoutMs` – _`[number]`_ – _optional_ – idle-in-transaction session timeout in milliseconds, applied to pool connections. Auto-kills transactions left open by crashed tests.
 * `ignoreTables` – _`[string[]]`_ – _optional_ – names of tables to ignore when dropping
-* `schema` – _`string | URL | Umzug`_ – an umzug instance that can be used to initialize tables or the schema itself or a `URL` to a text file containing the schema
+* `lockId` – _`[number]`_ – _optional_ – advisory lock ID (default: `42`). All instances with the same `lockId` on the same PostgreSQL cluster serialize against each other — this is the intended isolation behavior that prevents concurrent test operations from interfering. Since `removeTables()` drops all public tables (not just the ones defined in `schema`), using different lock IDs only makes sense when test files target entirely separate databases (see [Parallel Test Runners](#parallel-test-runners)).
+* `lockTimeoutMs` – _`[number]`_ – _optional_ – lock acquisition timeout in milliseconds. When set, a `SET lock_timeout` is issued before acquiring the advisory lock. If another process holds the lock longer than this, the acquisition fails with a descriptive error instead of waiting indefinitely.
+* `schema` – _`string | URL | ((pool: pg.Pool) => Umzug)`_ – a factory function that receives the pool and returns an Umzug instance, or the schema itself as a string, or a `URL` to a text file containing the schema
+* `statementTimeoutMs` – _`[number]`_ – _optional_ – per-statement query timeout in milliseconds, applied to pool connections. Prevents any single query from hanging indefinitely.
 * `tableLoadOrder` – _`[Array<string[] | string>]`_ – _optional_ – tables in parent-first insertion order: the first item is loaded first and dropped last. Use nested arrays to group tables that can be dropped in parallel. Mutually exclusive with `tablesWithDependencies`.
 * `tablesWithDependencies` – _`[Array<string[] | string>]`_ – _optional_ – **Deprecated:** use `tableLoadOrder` instead. Tables in leaf-first deletion order: the first item is dropped first and loaded last.
 
 ### Methods
 
+* `setup() => Promise<this>` – convenience method that runs the standard sequence: `removeTables()`, `initTables()`, and `insertFixtures()` (when `fixtureFolder` is set). Returns `this` so it can be chained with `await using`. Calls `end()` internally on failure to prevent pool leaks.
 * `initTables() => Promise<void>` – sets up all of the tables. Automatically acquires an exclusive database lock on first call.
 * `insertFixtures() => Promise<void>` – inserts all the fixtures data into the tables (only usable if `fixtureFolder` has been set). Automatically acquires an exclusive database lock on first call.
-* `removeTables() => Promise<void>` – removes all of the tables (respecting `tableLoadOrder` / `tablesWithDependencies` ordering). Automatically acquires an exclusive database lock on first call.
+* `removeTables() => Promise<void>` – removes all of the tables (respecting `tableLoadOrder` / `tablesWithDependencies` ordering). Automatically acquires an exclusive database lock on first call. **Note:** this drops all tables in the `public` schema, not just those defined in `schema`.
 * `end() => Promise<void>` – releases the database lock (if acquired) and closes all database connections. **Always call this when done** to properly clean up resources.
+* `queryPromise` – _`Pool['query']`_ – bound reference to the underlying `pg.Pool.query()` method for ad-hoc SQL queries in tests.
+* `[Symbol.asyncDispose]() => Promise<void>` – alias for `end()`. Enables `await using` syntax for automatic cleanup.
 
 #### Database Locking
 
 The `PgTestHelpers` class uses [PostgreSQL advisory locks](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS) to ensure exclusive database access during test operations. The lock is automatically acquired on the first call to `initTables()`, `insertFixtures()`, or `removeTables()`, and is held until `end()` is called. This prevents multiple test suites from interfering with each other when using the same database.
+
+Advisory locks are **cluster-scoped** — all connections to the same PostgreSQL cluster (even to different databases) that use the same `lockId` will serialize against each other. The default `lockId` of `42` ensures all `PgTestHelpers` instances coordinate, which is normally what you want.
+
+#### Parallel Test Runners
+
+When using `node:test` or other parallel test runners, all test files share the same database and the same advisory lock (ID `42`). This means they serialize — which is correct, since `removeTables()` drops all public tables and concurrent drops would corrupt each other's state.
+
+If your test files truly need parallel execution, consider using separate databases per test file and setting a unique `lockId` per database.
+
+## pgTestSetup()
+
+Creates and sets up a `PgTestHelpers` instance in one step. Use with `await using` for automatic cleanup.
+
+### Syntax
+
+```ts
+pgTestSetup(options) => Promise<PgTestHelpers>
+```
+
+### Arguments
+
+* `options` – _[`PgTestHelpersOptions`](#pgtesthelpersoptions)_ – same options as the `PgTestHelpers` constructor
+
+## pgTestSetupFor()
+
+Creates and sets up a `PgTestHelpers` instance, registering cleanup via `t.after()`. No `await using` or `afterEach` needed.
+
+### Syntax
+
+```ts
+pgTestSetupFor(options, t) => Promise<PgTestHelpers>
+```
+
+### Arguments
+
+* `options` – _[`PgTestHelpersOptions`](#pgtesthelpersoptions)_ – same options as the `PgTestHelpers` constructor
+* `t` – _`{ after?: Function }`_ – a test context with an `after()` method (e.g., node:test's `TestContext`). Cleanup is registered via `t.after(() => helpers.end())`. Throws `TypeError` if `after` is missing.
+
+## Using with node:test
+
+### Per-test with `pgTestSetupFor` (recommended)
+
+The simplest pattern. `pgTestSetupFor` creates and sets up the helpers, then registers cleanup via `t.after()` — no `afterEach` or `await using` needed:
+
+```javascript
+import { describe, it } from 'node:test';
+import { pgTestSetupFor } from '@voxpelli/pg-utils';
+
+describe('my feature', () => {
+  it('inserts a record', async (t) => {
+    const helpers = await pgTestSetupFor({
+      connectionString: process.env.DATABASE_URL,
+      schema: new URL('./schema.sql', import.meta.url),
+    }, t);
+
+    // Tables are ready. helpers.end() called automatically via t.after()
+  });
+});
+```
+
+### Per-test with `await using`
+
+When you prefer scope-based cleanup or your test framework doesn't expose a test context:
+
+```javascript
+import { describe, it } from 'node:test';
+import { pgTestSetup } from '@voxpelli/pg-utils';
+
+describe('my feature', () => {
+  it('inserts a record', async () => {
+    await using helpers = await pgTestSetup({
+      connectionString: process.env.DATABASE_URL,
+      schema: new URL('./schema.sql', import.meta.url),
+    });
+
+    // Tables are ready. helpers.end() called automatically on scope exit.
+  });
+});
+```
+
+**Trade-off:** each test pays the full setup cost (drop + create + load fixtures). For suites with many tests against the same fixture data, use `beforeEach` with `pgTestSetupFor` instead.
+
+### Suite-level with `beforeEach` + `pgTestSetupFor`
+
+Use `pgTestSetupFor` inside `beforeEach` when the `helpers` reference is needed across multiple tests. The `t.after()` registration eliminates the need for a separate `afterEach` for helpers cleanup:
+
+```javascript
+import assert from 'node:assert/strict';
+import { beforeEach, describe, it } from 'node:test';
+import { pgTestSetupFor } from '@voxpelli/pg-utils';
+
+describe('my feature', () => {
+  /** @type {import('@voxpelli/pg-utils').PgTestHelpers} */
+  let helpers;
+
+  beforeEach(async (t) => {
+    helpers = await pgTestSetupFor({
+      connectionString: process.env.DATABASE_URL,
+      schema: new URL('./schema.sql', import.meta.url),
+      fixtureFolder: new URL('./fixtures', import.meta.url),
+    }, t);
+  });
+
+  it('reads a record', async () => {
+    const { rows } = await helpers.queryPromise('SELECT 1 AS val');
+    assert.strictEqual(rows[0]?.val, 1);
+  });
+});
+```
+
+`setup()` calls `end()` internally on failure, so no `try/catch` is needed in `beforeEach`. If you need additional cleanup beyond helpers (e.g., `app.close()`), add an `afterEach` for that.
+
+## Factory pattern
+
+For projects with multiple test files sharing the same database configuration, centralise setup in a factory function:
+
+```javascript
+// tools/test-helpers.js
+import { pgTestSetupFor } from '@voxpelli/pg-utils';
+
+/** @param {{ after?: (fn: () => Promise<void>) => void }} t */
+export const testSetup = (t) => pgTestSetupFor({
+  connectionString: process.env.DATABASE_URL,
+  schema: new URL('../schema.sql', import.meta.url),
+  fixtureFolder: new URL('../test/fixtures', import.meta.url),
+  tableLoadOrder: [
+    'accounts',
+    ['posts', 'comments'],
+  ],
+}, t);
+```
+
+Test files become minimal:
+
+```javascript
+import { beforeEach, describe, it } from 'node:test';
+import { testSetup } from '../tools/test-helpers.js';
+
+describe('posts', () => {
+  /** @type {import('@voxpelli/pg-utils').PgTestHelpers} */
+  let helpers;
+
+  beforeEach(async (t) => {
+    helpers = await testSetup(t);
+  });
+
+  // No afterEach needed — cleanup registered via t.after()
+
+  // ... tests using helpers.queryPromise ...
+});
+```
 
 ## csvFromFolderToDb()
 
@@ -125,21 +308,8 @@ dbToCsvFolder(connection, outputPath, tables, [options]) => Promise<void>
 * `outputPath` – _`string | URL`_ – the directory to write CSV files into (created if it does not exist)
 * `tables` – _`string[]`_ – explicit list of table names to export
 * `options` – _`object`_ – _optional_
-  * `orderBy` – _`string`_ – SQL `ORDER BY` expression for deterministic output (default: `'1'`, i.e. the first column)
+  * `orderBy` – _`string`_ – column index (e.g. `'1'`) or simple identifier (e.g. `'created_at'`) for deterministic output ordering (default: `'1'`, i.e. the first column). Expressions, `ASC`/`DESC`, and multi-column values are not accepted.
 
 ### Returns
 
 `Promise` that resolves on completion
-
-<!-- ## Used by
-
-* [`example`](https://example.com/) – used by this one to do X and Y
-
-## Similar modules
-
-* [`example`](https://example.com/) – is similar in this way
-
-## See also
-
-* [Announcement blog post](#)
-* [Announcement tweet](#) -->

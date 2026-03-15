@@ -6,7 +6,7 @@ import sinon from 'sinon';
 
 import { messageWithCauses } from 'pony-cause';
 
-import { PgTestHelpers } from '../../index.js';
+import { PgTestHelpers, pgTestSetup, pgTestSetupFor } from '../../index.js';
 
 import { connectionString } from '../db.js';
 
@@ -272,20 +272,23 @@ describe('PgTestHelpers integration', function () {
           return { order: 'second' };
         });
 
-      const { order } = await Promise.race([
-        firstInit,
-        secondInit,
-      ]);
+      try {
+        const { order } = await Promise.race([
+          firstInit,
+          secondInit,
+        ]);
 
-      firstCompleted.should.not.equal(secondCompleted, 'Only one should have completed');
+        firstCompleted.should.not.equal(secondCompleted, 'Only one should have completed');
 
-      await (order === 'first' ? testHelpers1 : testHelpers2).end();
+        await (order === 'first' ? testHelpers1 : testHelpers2).end();
 
-      await (order === 'first' ? secondInit : firstInit);
+        await (order === 'first' ? secondInit : firstInit);
 
-      firstCompleted.should.equal(secondCompleted, 'Both should have completed');
-
-      await (order === 'first' ? testHelpers2 : testHelpers1).end();
+        firstCompleted.should.equal(secondCompleted, 'Both should have completed');
+      } finally {
+        await testHelpers1.end();
+        await testHelpers2.end();
+      }
     });
   });
 
@@ -394,6 +397,244 @@ describe('PgTestHelpers integration', function () {
         tableLoadOrder: ['foobar'],
         tablesWithDependencies: ['foobar'],
       }), /Cannot specify both/);
+    });
+  });
+
+  describe('lockId and timeout options', () => {
+    it('should timeout when lock cannot be acquired within lockTimeoutMs', async function () {
+      this.timeout(10000);
+
+      const schema = new URL('../create-simple-tables.pgsql', import.meta.url);
+
+      // First helper holds the lock
+      const holder = new PgTestHelpers({ connectionString, schema });
+
+      try {
+        await holder.removeTables();
+
+        // Second helper with a short timeout should fail
+        const contender = new PgTestHelpers({
+          connectionString,
+          schema,
+          lockTimeoutMs: 200,
+        });
+
+        try {
+          await contender.removeTables();
+          throw new Error('Should have thrown');
+        } catch (/** @type {unknown} */ err) {
+          const error = /** @type {Error & { cause?: Error }} */ (err);
+          error.message.should.match(/Failed to remove tables|Failed to acquire database lock/);
+        } finally {
+          await contender.end();
+        }
+      } finally {
+        await holder.end();
+      }
+    });
+
+    it('should allow concurrent access with different lockIds', async function () {
+      this.timeout(10000);
+
+      const schema = new URL('../create-simple-tables.pgsql', import.meta.url);
+
+      const helpers1 = new PgTestHelpers({ connectionString, schema, lockId: 9001 });
+      const helpers2 = new PgTestHelpers({ connectionString, schema, lockId: 9002 });
+
+      try {
+        let first = false;
+        let second = false;
+
+        // Both should complete without blocking each other
+        await Promise.all([
+          // eslint-disable-next-line promise/prefer-await-to-then
+          helpers1.removeTables().then(() => { first = true; return first; }),
+          // eslint-disable-next-line promise/prefer-await-to-then
+          helpers2.removeTables().then(() => { second = true; return second; }),
+        ]);
+
+        first.should.equal(true, 'first should have completed');
+        second.should.equal(true, 'second should have completed');
+      } finally {
+        await helpers1.end();
+        await helpers2.end();
+      }
+    });
+
+    it('should release lock when initTables fails', async function () {
+      this.timeout(10000);
+
+      const lockId = 9003;
+
+      // First helper with deliberately broken schema
+      const broken = new PgTestHelpers({
+        connectionString,
+        schema: 'THIS IS NOT VALID SQL;',
+        lockId,
+      });
+
+      try {
+        await broken.initTables();
+        throw new Error('Should have thrown');
+      } catch (/** @type {unknown} */ err) {
+        const error = /** @type {Error} */ (err);
+        error.message.should.match(/Failed to create tables|Transaction rolled back/);
+      } finally {
+        await broken.end();
+      }
+
+      // Second helper with the same lockId should acquire without hanging
+      const successor = new PgTestHelpers({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+        lockId,
+        lockTimeoutMs: 2000,
+      });
+
+      try {
+        await successor.removeTables();
+      } finally {
+        await successor.end();
+      }
+    });
+  });
+
+  describe('setup() convenience method', () => {
+    it('should set up tables and return the instance', async () => {
+      const helpers = new PgTestHelpers({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+      });
+
+      try {
+        const result = await helpers.setup();
+        result.should.equal(helpers);
+
+        const { rows } = await helpers.queryPromise(
+          'SELECT tablename FROM pg_tables WHERE schemaname = \'public\''
+        );
+        rows.should.deep.equal([{ tablename: 'users' }]);
+      } finally {
+        await helpers.end();
+      }
+    });
+
+    it('should load fixtures when fixtureFolder is set', async () => {
+      const helpers = new PgTestHelpers({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+        fixtureFolder: new URL('../simple-fixtures', import.meta.url),
+      });
+
+      try {
+        await helpers.setup();
+
+        const { rows } = await helpers.queryPromise('SELECT email FROM users ORDER BY email');
+        rows.map(r => r.email).should.deep.equal(['bob@example.com', 'carl@example.com']);
+      } finally {
+        await helpers.end();
+      }
+    });
+
+    it('should work with Symbol.asyncDispose for automatic cleanup', async () => {
+      const helpers = await new PgTestHelpers({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+      }).setup();
+
+      try {
+        const { rows } = await helpers.queryPromise(
+          'SELECT tablename FROM pg_tables WHERE schemaname = \'public\''
+        );
+        rows.should.deep.equal([{ tablename: 'users' }]);
+      } finally {
+        // Simulate what await using does
+        await helpers[Symbol.asyncDispose]();
+      }
+    });
+  });
+
+  describe('pgTestSetup() standalone factory', () => {
+    it('should set up tables and return a PgTestHelpers instance', async () => {
+      const helpers = await pgTestSetup({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+      });
+
+      try {
+        helpers.should.be.an.instanceof(PgTestHelpers);
+        const { rows } = await helpers.queryPromise(
+          'SELECT tablename FROM pg_tables WHERE schemaname = \'public\''
+        );
+        rows.should.deep.equal([{ tablename: 'users' }]);
+      } finally {
+        await helpers.end();
+      }
+    });
+
+    it('should clean up pool on setup failure', async () => {
+      try {
+        await pgTestSetup({
+          connectionString,
+          schema: 'THIS IS NOT VALID SQL;',
+        });
+        throw new Error('Should have thrown');
+      } catch (/** @type {unknown} */ err) {
+        const error = /** @type {Error} */ (err);
+        error.message.should.match(/Failed to create tables|Transaction rolled back/);
+      }
+      // If pool leaked, this test would hang — reaching here proves cleanup worked
+    });
+  });
+
+  describe('pgTestSetupFor() with test context', () => {
+    it('should set up tables and register cleanup on t.after()', async () => {
+      /** @type {Array<() => Promise<void>>} */
+      const afterCallbacks = [];
+      const mockT = { after: (/** @type {() => Promise<void>} */ fn) => afterCallbacks.push(fn) };
+
+      const helpers = await pgTestSetupFor({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+      }, mockT);
+
+      try {
+        helpers.should.be.an.instanceof(PgTestHelpers);
+        afterCallbacks.should.have.lengthOf(1);
+
+        const { rows } = await helpers.queryPromise(
+          'SELECT tablename FROM pg_tables WHERE schemaname = \'public\''
+        );
+        rows.should.deep.equal([{ tablename: 'users' }]);
+      } finally {
+        // Simulate what t.after() would do
+        for (const cb of afterCallbacks) {
+          await cb();
+        }
+      }
+
+      // Verify the callback actually ended the pool
+      try {
+        await helpers.queryPromise('SELECT 1');
+        throw new Error('Expected query to fail after cleanup');
+      } catch (/** @type {unknown} */ err) {
+        /** @type {Error} */ (err).message.should.match(/Cannot use a pool after calling end/i);
+      }
+    });
+
+    it('should clean up pool on setup failure', async () => {
+      const mockT = { after: () => {} };
+
+      try {
+        await pgTestSetupFor({
+          connectionString,
+          schema: 'THIS IS NOT VALID SQL;',
+        }, mockT);
+        throw new Error('Should have thrown');
+      } catch (/** @type {unknown} */ err) {
+        const error = /** @type {Error} */ (err);
+        error.message.should.match(/Failed to create tables|Transaction rolled back/);
+      }
     });
   });
 });
