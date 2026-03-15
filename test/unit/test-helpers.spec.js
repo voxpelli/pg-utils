@@ -67,8 +67,20 @@ describe('PgTestHelpers', function () {
     should.throw(() => new PgTestHelpers({ ...validConfig, tableLoadOrder: 'foo' }), /^Invalid tableLoadOrder/);
   });
 
+  it('should fail when given non-integer lockId', () => {
+    should.throw(() => new PgTestHelpers({ ...validConfig, lockId: 3.5 }), /Invalid lockId/);
+  });
+
+  it('should fail when given negative lockTimeoutMs', () => {
+    should.throw(() => new PgTestHelpers({ ...validConfig, lockTimeoutMs: -1 }), /Invalid lockTimeoutMs/);
+  });
+
   it('should fail when given invalid statementTimeoutMs', () => {
     should.throw(() => new PgTestHelpers({ ...validConfig, statementTimeoutMs: /** @type {*} */ ('five') }), /Invalid statementTimeoutMs/);
+  });
+
+  it('should fail when given negative statementTimeoutMs', () => {
+    should.throw(() => new PgTestHelpers({ ...validConfig, statementTimeoutMs: -100 }), /Invalid statementTimeoutMs/);
   });
 
   it('should fail when given invalid idleInTransactionTimeoutMs', () => {

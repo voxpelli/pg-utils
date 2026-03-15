@@ -438,22 +438,24 @@ describe('PgTestHelpers integration', function () {
       const helpers1 = new PgTestHelpers({ connectionString, schema, lockId: 9001 });
       const helpers2 = new PgTestHelpers({ connectionString, schema, lockId: 9002 });
 
-      let first = false;
-      let second = false;
+      try {
+        let first = false;
+        let second = false;
 
-      // Both should complete without blocking each other
-      await Promise.all([
-        // eslint-disable-next-line promise/prefer-await-to-then
-        helpers1.removeTables().then(() => { first = true; return first; }),
-        // eslint-disable-next-line promise/prefer-await-to-then
-        helpers2.removeTables().then(() => { second = true; return second; }),
-      ]);
+        // Both should complete without blocking each other
+        await Promise.all([
+          // eslint-disable-next-line promise/prefer-await-to-then
+          helpers1.removeTables().then(() => { first = true; return first; }),
+          // eslint-disable-next-line promise/prefer-await-to-then
+          helpers2.removeTables().then(() => { second = true; return second; }),
+        ]);
 
-      first.should.equal(true, 'first should have completed');
-      second.should.equal(true, 'second should have completed');
-
-      await helpers1.end();
-      await helpers2.end();
+        first.should.equal(true, 'first should have completed');
+        second.should.equal(true, 'second should have completed');
+      } finally {
+        await helpers1.end();
+        await helpers2.end();
+      }
     });
 
     it('should release lock when initTables fails', async function () {
