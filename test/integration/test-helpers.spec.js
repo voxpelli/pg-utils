@@ -607,6 +607,14 @@ describe('PgTestHelpers integration', function () {
           await cb();
         }
       }
+
+      // Verify the callback actually ended the pool
+      try {
+        await helpers.queryPromise('SELECT 1');
+        throw new Error('Expected query to fail after cleanup');
+      } catch (/** @type {unknown} */ err) {
+        /** @type {Error} */ (err).message.should.match(/Cannot use a pool after calling end/i);
+      }
     });
 
     it('should clean up pool on setup failure', async () => {

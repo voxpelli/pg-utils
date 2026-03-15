@@ -100,7 +100,7 @@ new PgTestHelpers({
 * `ignoreTables` – _`[string[]]`_ – _optional_ – names of tables to ignore when dropping
 * `lockId` – _`[number]`_ – _optional_ – advisory lock ID (default: `42`). All instances with the same `lockId` on the same PostgreSQL cluster serialize against each other — this is the intended isolation behavior that prevents concurrent test operations from interfering. Since `removeTables()` drops all public tables (not just the ones defined in `schema`), using different lock IDs only makes sense when test files target entirely separate databases (see [Parallel Test Runners](#parallel-test-runners)).
 * `lockTimeoutMs` – _`[number]`_ – _optional_ – lock acquisition timeout in milliseconds. When set, a `SET lock_timeout` is issued before acquiring the advisory lock. If another process holds the lock longer than this, the acquisition fails with a descriptive error instead of waiting indefinitely.
-* `schema` – _`string | URL | Umzug`_ – an umzug instance that can be used to initialize tables or the schema itself or a `URL` to a text file containing the schema
+* `schema` – _`string | URL | ((pool: pg.Pool) => Umzug)`_ – a factory function that receives the pool and returns an Umzug instance, or the schema itself as a string, or a `URL` to a text file containing the schema
 * `statementTimeoutMs` – _`[number]`_ – _optional_ – per-statement query timeout in milliseconds, applied to pool connections. Prevents any single query from hanging indefinitely.
 * `tableLoadOrder` – _`[Array<string[] | string>]`_ – _optional_ – tables in parent-first insertion order: the first item is loaded first and dropped last. Use nested arrays to group tables that can be dropped in parallel. Mutually exclusive with `tablesWithDependencies`.
 * `tablesWithDependencies` – _`[Array<string[] | string>]`_ – _optional_ – **Deprecated:** use `tableLoadOrder` instead. Tables in leaf-first deletion order: the first item is dropped first and loaded last.
@@ -112,6 +112,7 @@ new PgTestHelpers({
 * `insertFixtures() => Promise<void>` – inserts all the fixtures data into the tables (only usable if `fixtureFolder` has been set). Automatically acquires an exclusive database lock on first call.
 * `removeTables() => Promise<void>` – removes all of the tables (respecting `tableLoadOrder` / `tablesWithDependencies` ordering). Automatically acquires an exclusive database lock on first call. **Note:** this drops all tables in the `public` schema, not just those defined in `schema`.
 * `end() => Promise<void>` – releases the database lock (if acquired) and closes all database connections. **Always call this when done** to properly clean up resources.
+* `queryPromise` – _`Pool['query']`_ – bound reference to the underlying `pg.Pool.query()` method for ad-hoc SQL queries in tests.
 * `[Symbol.asyncDispose]() => Promise<void>` – alias for `end()`. Enables `await using` syntax for automatic cleanup.
 
 #### Database Locking

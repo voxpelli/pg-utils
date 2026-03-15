@@ -31,13 +31,14 @@ describe('dbToCsvFolder', () => {
     });
 
     it('should accept a column index', async () => {
-      // Validation passes — rejected with a connection error, not a validation error
+      // Validation passes — fails on connection, not validation
       try {
         await dbToCsvFolder('postgres://x', '/tmp/test', ['t'], { orderBy: '1' });
         throw new Error('Should have thrown');
       } catch (/** @type {unknown} */ err) {
         const error = /** @type {Error} */ (err);
         error.message.should.not.match(/Invalid orderBy/);
+        error.message.should.match(/connect|ECONNREFUSED|ENOTFOUND|getaddrinfo/i);
       }
     });
 
@@ -48,6 +49,7 @@ describe('dbToCsvFolder', () => {
       } catch (/** @type {unknown} */ err) {
         const error = /** @type {Error} */ (err);
         error.message.should.not.match(/Invalid orderBy/);
+        error.message.should.match(/connect|ECONNREFUSED|ENOTFOUND|getaddrinfo/i);
       }
     });
   });
