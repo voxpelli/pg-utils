@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.1.0](https://github.com/voxpelli/pg-utils/compare/v4.0.0...v4.1.0) (2026-03-15)
+
+
+### 🌟 Features
+
+* export PgTestHelpersOptions type for consumers ([bf062eb](https://github.com/voxpelli/pg-utils/commit/bf062ebc377ffc6b9494f68badfb6597999c7d54))
+* export PgTestHelpersOptions, use typed-utils, type pgTestSetupFor with node:test ([9eeede7](https://github.com/voxpelli/pg-utils/commit/9eeede7ce7f302232eaf7b6000d33b7c7d642b53))
+
+
+### 🧹 Chores
+
+* gitignore UPSTREAM-*.md and RETRO-*.md ([a5deec5](https://github.com/voxpelli/pg-utils/commit/a5deec57f4bc606e4db3b5f6f2c658c9e7d8b552))
+* remove beads issue tracking ([a4f0b93](https://github.com/voxpelli/pg-utils/commit/a4f0b93c24ed4f9c34f5fd850bb07b59a04f12f9))
+* use `@voxpelli/typed-utils` a bit more ([a6815b1](https://github.com/voxpelli/pg-utils/commit/a6815b10fdf34ac62f8913fef5802e4f2c7ee5e3))
+
 ## [4.0.0](https://github.com/voxpelli/pg-utils/compare/v3.1.1...v4.0.0) (2026-03-15)
 
 
