@@ -1,7 +1,7 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { PgTestHelpers } from '../../index.js';
+import { PgTestHelpers, pgTestSetup, pgTestSetupFor } from '../../index.js';
 
 chai.use(chaiAsPromised);
 
@@ -129,5 +129,26 @@ describe('PgTestHelpers', function () {
 
     // end() is idempotent — calling again should be safe
     await testHelpers.end();
+  });
+
+  describe('pgTestSetup', () => {
+    it('should be a function', () => {
+      (typeof pgTestSetup).should.equal('function');
+    });
+  });
+
+  describe('pgTestSetupFor', () => {
+    it('should be a function', () => {
+      (typeof pgTestSetupFor).should.equal('function');
+    });
+
+    it('should throw when given a context without after()', async () => {
+      await pgTestSetupFor(validConfig, {}).should.be.rejectedWith(/requires a test context with an after/);
+    });
+
+    it('should throw when given no context', async () => {
+      // @ts-expect-error
+      await pgTestSetupFor(validConfig).should.be.rejectedWith(/requires a test context with an after/);
+    });
   });
 });

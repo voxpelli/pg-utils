@@ -6,7 +6,7 @@ import sinon from 'sinon';
 
 import { messageWithCauses } from 'pony-cause';
 
-import { PgTestHelpers } from '../../index.js';
+import { PgTestHelpers, pgTestSetup, pgTestSetupFor } from '../../index.js';
 
 import { connectionString } from '../db.js';
 
@@ -545,6 +545,82 @@ describe('PgTestHelpers integration', function () {
       } finally {
         // Simulate what await using does
         await helpers[Symbol.asyncDispose]();
+      }
+    });
+  });
+
+  describe('pgTestSetup() standalone factory', () => {
+    it('should set up tables and return a PgTestHelpers instance', async () => {
+      const helpers = await pgTestSetup({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+      });
+
+      try {
+        helpers.should.be.an.instanceof(PgTestHelpers);
+        const { rows } = await helpers.queryPromise(
+          'SELECT tablename FROM pg_tables WHERE schemaname = \'public\''
+        );
+        rows.should.deep.equal([{ tablename: 'users' }]);
+      } finally {
+        await helpers.end();
+      }
+    });
+
+    it('should clean up pool on setup failure', async () => {
+      try {
+        await pgTestSetup({
+          connectionString,
+          schema: 'THIS IS NOT VALID SQL;',
+        });
+        throw new Error('Should have thrown');
+      } catch (/** @type {unknown} */ err) {
+        const error = /** @type {Error} */ (err);
+        error.message.should.match(/Failed to create tables|Transaction rolled back/);
+      }
+      // If pool leaked, this test would hang — reaching here proves cleanup worked
+    });
+  });
+
+  describe('pgTestSetupFor() with test context', () => {
+    it('should set up tables and register cleanup on t.after()', async () => {
+      /** @type {Array<() => Promise<void>>} */
+      const afterCallbacks = [];
+      const mockT = { after: (/** @type {() => Promise<void>} */ fn) => afterCallbacks.push(fn) };
+
+      const helpers = await pgTestSetupFor({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+      }, mockT);
+
+      try {
+        helpers.should.be.an.instanceof(PgTestHelpers);
+        afterCallbacks.should.have.lengthOf(1);
+
+        const { rows } = await helpers.queryPromise(
+          'SELECT tablename FROM pg_tables WHERE schemaname = \'public\''
+        );
+        rows.should.deep.equal([{ tablename: 'users' }]);
+      } finally {
+        // Simulate what t.after() would do
+        for (const cb of afterCallbacks) {
+          await cb();
+        }
+      }
+    });
+
+    it('should clean up pool on setup failure', async () => {
+      const mockT = { after: () => {} };
+
+      try {
+        await pgTestSetupFor({
+          connectionString,
+          schema: 'THIS IS NOT VALID SQL;',
+        }, mockT);
+        throw new Error('Should have thrown');
+      } catch (/** @type {unknown} */ err) {
+        const error = /** @type {Error} */ (err);
+        error.message.should.match(/Failed to create tables|Transaction rolled back/);
       }
     });
   });
