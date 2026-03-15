@@ -71,8 +71,16 @@ describe('PgTestHelpers', function () {
     should.throw(() => new PgTestHelpers({ ...validConfig, lockId: 3.5 }), /Invalid lockId/);
   });
 
+  it('should fail when given unsafe integer lockId', () => {
+    should.throw(() => new PgTestHelpers({ ...validConfig, lockId: Number.MAX_SAFE_INTEGER + 1 }), /Invalid lockId/);
+  });
+
   it('should fail when given negative lockTimeoutMs', () => {
     should.throw(() => new PgTestHelpers({ ...validConfig, lockTimeoutMs: -1 }), /Invalid lockTimeoutMs/);
+  });
+
+  it('should fail when given float lockTimeoutMs', () => {
+    should.throw(() => new PgTestHelpers({ ...validConfig, lockTimeoutMs: 1.5 }), /Invalid lockTimeoutMs/);
   });
 
   it('should fail when given invalid statementTimeoutMs', () => {
