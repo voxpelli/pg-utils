@@ -16,3 +16,7 @@
 
 # Library specific ones
 /test/.env
+
+# Dolt database files (added by bd init)
+.dolt/
+*.db
