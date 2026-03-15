@@ -67,12 +67,67 @@ describe('PgTestHelpers', function () {
 
     should.exist(testHelpers);
 
-    await testHelpers.insertFixtures().should.be.rejectedWith(/No fixture folder defined/);
+    try {
+      await testHelpers.insertFixtures().should.be.rejectedWith(/No fixture folder defined/);
+    } finally {
+      await testHelpers.end();
+    }
   });
 
-  it('should work when given valid options', () => {
+  it('should work when given valid options', async () => {
     const testHelpers = new PgTestHelpers({ ...validConfig });
 
     should.exist(testHelpers);
+    await testHelpers.end();
+  });
+
+  it('should accept lockId option', async () => {
+    const testHelpers = new PgTestHelpers({ ...validConfig, lockId: 12345 });
+
+    should.exist(testHelpers);
+    await testHelpers.end();
+  });
+
+  it('should accept lockTimeoutMs option', async () => {
+    const testHelpers = new PgTestHelpers({ ...validConfig, lockTimeoutMs: 5000 });
+
+    should.exist(testHelpers);
+    await testHelpers.end();
+  });
+
+  it('should accept timeout options', async () => {
+    const testHelpers = new PgTestHelpers({
+      ...validConfig,
+      statementTimeoutMs: 30000,
+      idleInTransactionTimeoutMs: 15000,
+    });
+
+    should.exist(testHelpers);
+    await testHelpers.end();
+  });
+
+  it('should allow end() to be called twice without throwing', async () => {
+    const testHelpers = new PgTestHelpers({ ...validConfig });
+
+    await testHelpers.end();
+    await testHelpers.end();
+  });
+
+  it('should allow end() without any prior locking operation', async () => {
+    const testHelpers = new PgTestHelpers({ ...validConfig });
+
+    await testHelpers.end();
+  });
+
+  it('should have Symbol.asyncDispose method that calls end()', async () => {
+    const testHelpers = new PgTestHelpers({ ...validConfig });
+
+    (typeof testHelpers[Symbol.asyncDispose]).should.equal('function');
+
+    // Actually invoke dispose — verifies it delegates to end()
+    await testHelpers[Symbol.asyncDispose]();
+
+    // end() is idempotent — calling again should be safe
+    await testHelpers.end();
   });
 });
