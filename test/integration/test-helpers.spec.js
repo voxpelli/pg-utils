@@ -396,4 +396,156 @@ describe('PgTestHelpers integration', function () {
       }), /Cannot specify both/);
     });
   });
+
+  describe('lockId and timeout options', () => {
+    it('should timeout when lock cannot be acquired within lockTimeoutMs', async function () {
+      this.timeout(10000);
+
+      const schema = new URL('../create-simple-tables.pgsql', import.meta.url);
+
+      // First helper holds the lock
+      const holder = new PgTestHelpers({ connectionString, schema });
+
+      try {
+        await holder.removeTables();
+
+        // Second helper with a short timeout should fail
+        const contender = new PgTestHelpers({
+          connectionString,
+          schema,
+          lockTimeoutMs: 200,
+        });
+
+        try {
+          await contender.removeTables();
+          throw new Error('Should have thrown');
+        } catch (/** @type {unknown} */ err) {
+          const error = /** @type {Error & { cause?: Error }} */ (err);
+          error.message.should.match(/Failed to remove tables|Failed to acquire database lock/);
+        } finally {
+          await contender.end();
+        }
+      } finally {
+        await holder.end();
+      }
+    });
+
+    it('should allow concurrent access with different lockIds', async function () {
+      this.timeout(10000);
+
+      const schema = new URL('../create-simple-tables.pgsql', import.meta.url);
+
+      const helpers1 = new PgTestHelpers({ connectionString, schema, lockId: 9001 });
+      const helpers2 = new PgTestHelpers({ connectionString, schema, lockId: 9002 });
+
+      let first = false;
+      let second = false;
+
+      // Both should complete without blocking each other
+      await Promise.all([
+        // eslint-disable-next-line promise/prefer-await-to-then
+        helpers1.removeTables().then(() => { first = true; return first; }),
+        // eslint-disable-next-line promise/prefer-await-to-then
+        helpers2.removeTables().then(() => { second = true; return second; }),
+      ]);
+
+      first.should.equal(true, 'first should have completed');
+      second.should.equal(true, 'second should have completed');
+
+      await helpers1.end();
+      await helpers2.end();
+    });
+
+    it('should release lock when initTables fails', async function () {
+      this.timeout(10000);
+
+      const lockId = 9003;
+
+      // First helper with deliberately broken schema
+      const broken = new PgTestHelpers({
+        connectionString,
+        schema: 'THIS IS NOT VALID SQL;',
+        lockId,
+      });
+
+      try {
+        await broken.initTables();
+        throw new Error('Should have thrown');
+      } catch (/** @type {unknown} */ err) {
+        const error = /** @type {Error} */ (err);
+        error.message.should.match(/Failed to create tables|Transaction rolled back/);
+      } finally {
+        await broken.end();
+      }
+
+      // Second helper with the same lockId should acquire without hanging
+      const successor = new PgTestHelpers({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+        lockId,
+        lockTimeoutMs: 2000,
+      });
+
+      try {
+        await successor.removeTables();
+      } finally {
+        await successor.end();
+      }
+    });
+  });
+
+  describe('setup() convenience method', () => {
+    it('should set up tables and return the instance', async () => {
+      const helpers = new PgTestHelpers({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+      });
+
+      try {
+        const result = await helpers.setup();
+        result.should.equal(helpers);
+
+        const { rows } = await helpers.queryPromise(
+          'SELECT tablename FROM pg_tables WHERE schemaname = \'public\''
+        );
+        rows.should.deep.equal([{ tablename: 'users' }]);
+      } finally {
+        await helpers.end();
+      }
+    });
+
+    it('should load fixtures when fixtureFolder is set', async () => {
+      const helpers = new PgTestHelpers({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+        fixtureFolder: new URL('../simple-fixtures', import.meta.url),
+      });
+
+      try {
+        await helpers.setup();
+
+        const { rows } = await helpers.queryPromise('SELECT email FROM users ORDER BY email');
+        rows.map(r => r.email).should.deep.equal(['bob@example.com', 'carl@example.com']);
+      } finally {
+        await helpers.end();
+      }
+    });
+
+    it('should work with Symbol.asyncDispose for automatic cleanup', async () => {
+      const helpers = await new PgTestHelpers({
+        connectionString,
+        schema: new URL('../create-simple-tables.pgsql', import.meta.url),
+      }).setup();
+
+      try {
+        const { rows } = await helpers.queryPromise(
+          'SELECT tablename FROM pg_tables WHERE schemaname = \'public\''
+        );
+        rows.should.deep.equal([{ tablename: 'users' }]);
+      } finally {
+        // Simulate what await using does
+        await helpers[Symbol.asyncDispose]();
+      }
+    });
+  });
 });
