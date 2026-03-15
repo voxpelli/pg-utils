@@ -62,6 +62,19 @@ describe('PgTestHelpers', function () {
     should.throw(() => new PgTestHelpers({ ...validConfig, tablesWithDependencies: 'foo' }), /^Invalid tablesWithDependencies/);
   });
 
+  it('should fail when given invalid tableLoadOrder', () => {
+    // @ts-expect-error
+    should.throw(() => new PgTestHelpers({ ...validConfig, tableLoadOrder: 'foo' }), /^Invalid tableLoadOrder/);
+  });
+
+  it('should fail when given invalid statementTimeoutMs', () => {
+    should.throw(() => new PgTestHelpers({ ...validConfig, statementTimeoutMs: /** @type {*} */ ('five') }), /Invalid statementTimeoutMs/);
+  });
+
+  it('should fail when given invalid idleInTransactionTimeoutMs', () => {
+    should.throw(() => new PgTestHelpers({ ...validConfig, idleInTransactionTimeoutMs: Infinity }), /Invalid idleInTransactionTimeoutMs/);
+  });
+
   it('should fail when trying to init fixtures when fixtureFolder is not set', async () => {
     const testHelpers = new PgTestHelpers({ ...validConfig });
 
