@@ -74,7 +74,7 @@
     "@voxpelli/typed-utils": "^4.1.0",
     "pg": "^8.18.0",
     "pg-copy-streams": "^7.0.0",
-    "umzeption": "^0.4.1",
+    "umzeption": "^0.4.1 || ^0.5.0",
     "umzug": "^3.8.2"
   }
 }
