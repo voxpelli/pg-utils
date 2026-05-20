@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.1](https://github.com/voxpelli/pg-utils/compare/v4.1.0...v4.1.1) (2026-05-20)
+
+
+### 🩹 Fixes
+
+* **deps:** widen umzeption range to allow 0.5.x ([#60](https://github.com/voxpelli/pg-utils/issues/60)) ([8546ffe](https://github.com/voxpelli/pg-utils/commit/8546ffe50d00b0d7b237b39cceadf94a47aa4b05))
+
 ## [4.1.0](https://github.com/voxpelli/pg-utils/compare/v4.0.0...v4.1.0) (2026-03-15)
 
 
