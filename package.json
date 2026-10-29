@@ -71,7 +71,7 @@
   },
   "dependencies": {
     "@types/pg": "^8.16.0",
-    "@voxpelli/typed-utils": "^4.1.0",
+    "@voxpelli/typed-utils": "^5.0.0",
     "pg": "^8.18.0",
     "pg-copy-streams": "^7.0.0",
     "umzeption": "^0.4.1 || ^0.5.0",
